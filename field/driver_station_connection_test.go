@@ -5,12 +5,13 @@ package field
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/Team254/cheesy-arena/network"
-	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/network"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeControlPacket(t *testing.T) {
@@ -26,7 +27,7 @@ func TestEncodeControlPacket(t *testing.T) {
 	assert.Equal(t, byte(0), data[5])
 	assert.Equal(t, byte(0), data[6])
 	assert.Equal(t, byte(0), data[20])
-	assert.Equal(t, byte(15), data[21])
+	assert.Equal(t, byte(20), data[21])
 
 	// Check the different alliance station values.
 	dsConn.AllianceStation = "R2"
@@ -117,11 +118,11 @@ func TestEncodeControlPacket(t *testing.T) {
 	arena.MatchState = AutoPeriod
 	arena.MatchStartTime = time.Now().Add(-time.Duration(4 * time.Second))
 	data = dsConn.encodeControlPacket(arena)
-	assert.Equal(t, byte(11), data[21])
+	assert.Equal(t, byte(16), data[21])
 	arena.MatchState = PausePeriod
 	arena.MatchStartTime = time.Now().Add(-time.Duration(16 * time.Second))
 	data = dsConn.encodeControlPacket(arena)
-	assert.Equal(t, byte(135), data[21])
+	assert.Equal(t, byte(130), data[21])
 	arena.MatchState = TeleopPeriod
 	arena.MatchStartTime = time.Now().Add(-time.Duration(33 * time.Second))
 	data = dsConn.encodeControlPacket(arena)

@@ -111,11 +111,9 @@ type EventSettings struct {
 	PauseDurationSec                 int
 	TeleopDurationSec                int
 	WarningRemainingDurationSec      int
-	AutoBonusCoralThreshold          int
-	CoralBonusPerLevelThreshold      int
-	CoralBonusCoopEnabled            bool
-	BargeBonusPointThreshold         int
-	IncludeAlgaeInBargeBonus         bool
+	FuelEnergizedThreshold           int
+	FuelSuperchargedThreshold        int
+	TowerTraversalThreshold          int
 }
 
 func (database *Database) GetEventSettings() (*EventSettings, error) {
@@ -145,11 +143,9 @@ func (database *Database) GetEventSettings() (*EventSettings, error) {
 		PauseDurationSec:            game.MatchTiming.PauseDurationSec,
 		TeleopDurationSec:           game.MatchTiming.TeleopDurationSec,
 		WarningRemainingDurationSec: game.MatchTiming.WarningRemainingDurationSec,
-		AutoBonusCoralThreshold:     game.AutoBonusCoralThreshold,
-		CoralBonusPerLevelThreshold: game.CoralBonusPerLevelThreshold,
-		CoralBonusCoopEnabled:       game.CoralBonusCoopEnabled,
-		BargeBonusPointThreshold:    game.BargeBonusPointThreshold,
-		IncludeAlgaeInBargeBonus:    game.IncludeAlgaeInBargeBonus,
+		FuelEnergizedThreshold:      game.FuelEnergizedThreshold,
+		FuelSuperchargedThreshold:   game.FuelSuperchargedThreshold,
+		TowerTraversalThreshold:     game.TowerTraversalThreshold,
 	}
 
 	if err := database.eventSettingsTable.create(&eventSettings); err != nil {

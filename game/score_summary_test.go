@@ -4,8 +4,9 @@
 package game
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScoreSummaryDetermineMatchStatus(t *testing.T) {
@@ -23,36 +24,38 @@ func TestScoreSummaryDetermineMatchStatus(t *testing.T) {
 	assert.Equal(t, BlueWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
 
 	redScoreSummary.Score = 12
-	redScoreSummary.NumOpponentMajorFouls = 11
-	redScoreSummary.AutoPoints = 11
-	redScoreSummary.BargePoints = 11
-	blueScoreSummary.NumOpponentMajorFouls = 10
-	blueScoreSummary.AutoPoints = 10
-	blueScoreSummary.BargePoints = 10
+	redScoreSummary.FuelPoints = 11
+	redScoreSummary.TowerPoints = 11
+	redScoreSummary.AutoFuelPoints = 11
+	redScoreSummary.AutoTowerPoints = 11
+	blueScoreSummary.FuelPoints = 10
+	blueScoreSummary.TowerPoints = 10
+	blueScoreSummary.AutoFuelPoints = 10
+	blueScoreSummary.AutoTowerPoints = 10
 	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
 	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
 
-	blueScoreSummary.NumOpponentMajorFouls = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
+	// Fuel tiebreaker
+	blueScoreSummary.FuelPoints = 12
 	assert.Equal(t, BlueWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
+	redScoreSummary.FuelPoints = 12
+	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true)) // Tower tiebreaker: 11 vs 10
 
-	redScoreSummary.NumOpponentMajorFouls = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
-	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
-
-	blueScoreSummary.AutoPoints = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
+	// Tower tiebreaker
+	blueScoreSummary.TowerPoints = 12
 	assert.Equal(t, BlueWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
+	redScoreSummary.TowerPoints = 12
+	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true)) // Auto Fuel tiebreaker: 11 vs 10
 
-	redScoreSummary.AutoPoints = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
-	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
-
-	blueScoreSummary.BargePoints = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
+	// Auto Fuel tiebreaker
+	blueScoreSummary.AutoFuelPoints = 12
 	assert.Equal(t, BlueWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
+	redScoreSummary.AutoFuelPoints = 12
+	assert.Equal(t, RedWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true)) // Auto Tower tiebreaker: 11 vs 10
 
-	redScoreSummary.BargePoints = 12
-	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, false))
+	// Auto Tower tiebreaker
+	blueScoreSummary.AutoTowerPoints = 12
+	assert.Equal(t, BlueWonMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
+	redScoreSummary.AutoTowerPoints = 12
 	assert.Equal(t, TieMatch, DetermineMatchStatus(redScoreSummary, blueScoreSummary, true))
 }

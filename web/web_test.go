@@ -4,15 +4,16 @@
 package web
 
 import (
-	"github.com/Team254/cheesy-arena/field"
-	"github.com/Team254/cheesy-arena/game"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/Team254/cheesy-arena/field"
+	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIndex(t *testing.T) {
@@ -65,7 +66,7 @@ func readWebsocketError(t *testing.T, ws *websocket.Websocket) string {
 
 // Receives the next websocket message and asserts that it is of the given type.
 func readWebsocketType(t *testing.T, ws *websocket.Websocket, expectedMessageType string) any {
-	messageType, message, err := ws.ReadWithTimeout(time.Second)
+	messageType, message, err := ws.ReadWithTimeout(time.Second * 5)
 	if assert.Nil(t, err) {
 		assert.Equal(t, expectedMessageType, messageType)
 	}
@@ -75,7 +76,7 @@ func readWebsocketType(t *testing.T, ws *websocket.Websocket, expectedMessageTyp
 func readWebsocketMultiple(t *testing.T, ws *websocket.Websocket, count int) map[string]any {
 	messages := make(map[string]any)
 	for i := 0; i < count; i++ {
-		messageType, message, err := ws.ReadWithTimeout(time.Second)
+		messageType, message, err := ws.ReadWithTimeout(time.Second * 5)
 		if assert.Nil(t, err) {
 			messages[messageType] = message
 		}

@@ -20,30 +20,27 @@ func UpdateMatchSounds() {
 		{
 			"start",
 			"wav",
-			0,
+			float64(MatchTiming.WarmupDurationSec),
 		},
 		{
 			"end",
 			"wav",
-			float64(MatchTiming.AutoDurationSec),
+			GetDurationToAutoEnd().Seconds(),
 		},
 		{
 			"resume",
 			"wav",
-			float64(MatchTiming.AutoDurationSec + MatchTiming.PauseDurationSec),
+			GetDurationToTeleopStart().Seconds(),
 		},
 		{
 			"warning_sonar",
 			"wav",
-			float64(
-				MatchTiming.AutoDurationSec + MatchTiming.PauseDurationSec + MatchTiming.TeleopDurationSec -
-					MatchTiming.WarningRemainingDurationSec,
-			),
+			GetDurationToTeleopEnd().Seconds() - float64(MatchTiming.WarningRemainingDurationSec),
 		},
 		{
 			"end",
 			"wav",
-			float64(MatchTiming.AutoDurationSec + MatchTiming.PauseDurationSec + MatchTiming.TeleopDurationSec),
+			GetDurationToTeleopEnd().Seconds(),
 		},
 		{
 			"abort",

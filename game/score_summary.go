@@ -6,25 +6,20 @@
 package game
 
 type ScoreSummary struct {
-	LeavePoints             int
-	AutoPoints              int
-	NumCoral                int
-	CoralPoints             int
-	NumAlgae                int
-	AlgaePoints             int
-	BargePoints             int
-	MatchPoints             int
-	FoulPoints              int
-	Score                   int
-	CoopertitionCriteriaMet bool
-	CoopertitionBonus       bool
-	NumCoralLevels          int
-	NumCoralLevelsGoal      int
-	AutoBonusRankingPoint   bool
-	CoralBonusRankingPoint  bool
-	BargeBonusRankingPoint  bool
-	BonusRankingPoints      int
-	NumOpponentMajorFouls   int
+	FuelPoints                   int
+	TowerPoints                  int
+	AutoPoints                   int
+	AutoFuelPoints               int
+	AutoTowerPoints              int
+	MatchPoints                  int
+	FoulPoints                   int
+	Score                        int
+	FuelEnergizedRankingPoint    bool
+	FuelSuperchargedRankingPoint bool
+	TowerTraversalRankingPoint   bool
+	BonusRankingPoints           int
+	TotalFuel                    int
+	TotalTowers                  int
 }
 
 type MatchStatus int
@@ -48,20 +43,24 @@ func DetermineMatchStatus(redScoreSummary, blueScoreSummary *ScoreSummary, apply
 	}
 
 	if applyPlayoffTiebreakers {
-		// Check scoring breakdowns to resolve playoff ties.
-		if status := comparePoints(
-			redScoreSummary.NumOpponentMajorFouls, blueScoreSummary.NumOpponentMajorFouls,
-		); status != TieMatch {
+		// Check scoring breakdowns to resolve playoff ties (REBUILT 2026).
+		// 1. Fuel Points
+		if status := comparePoints(redScoreSummary.FuelPoints, blueScoreSummary.FuelPoints); status != TieMatch {
 			return status
 		}
-		if status := comparePoints(redScoreSummary.AutoPoints, blueScoreSummary.AutoPoints); status != TieMatch {
+		// 2. Tower Points
+		if status := comparePoints(redScoreSummary.TowerPoints, blueScoreSummary.TowerPoints); status != TieMatch {
 			return status
 		}
-		if status := comparePoints(redScoreSummary.BargePoints, blueScoreSummary.BargePoints); status != TieMatch {
+		// 3. Auto Fuel Points
+		if status := comparePoints(redScoreSummary.AutoFuelPoints, blueScoreSummary.AutoFuelPoints); status != TieMatch {
+			return status
+		}
+		// 4. Auto Tower Points
+		if status := comparePoints(redScoreSummary.AutoTowerPoints, blueScoreSummary.AutoTowerPoints); status != TieMatch {
 			return status
 		}
 	}
-
 	return TieMatch
 }
 

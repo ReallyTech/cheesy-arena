@@ -5,12 +5,13 @@ package web
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/tournament"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestMatchReview(t *testing.T) {
@@ -56,8 +57,8 @@ func TestMatchReviewEditExistingResult(t *testing.T) {
 	recorder := web.getHttpResponse("/match_review")
 	assert.Equal(t, 200, recorder.Code)
 	assert.Contains(t, recorder.Body.String(), ">QF4-3<")
-	assert.Contains(t, recorder.Body.String(), ">94<")  // The red score
-	assert.Contains(t, recorder.Body.String(), ">186<") // The blue score
+	assert.Contains(t, recorder.Body.String(), ">145<") // The red score
+	assert.Contains(t, recorder.Body.String(), ">145<") // The blue score
 
 	// Check response for non-existent match.
 	recorder = web.getHttpResponse(fmt.Sprintf("/match_review/%d/edit", 12345))
@@ -70,8 +71,8 @@ func TestMatchReviewEditExistingResult(t *testing.T) {
 
 	// Update the score to something else.
 	postBody := fmt.Sprintf(
-		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"EndgameStatuses\":[0,2,1]},\"BlueScore\":{"+
-			"\"Reef\":{\"TroughFar\":21},\"Fouls\":[{\"TeamId\":973,\"RuleId\":4}]},"+
+		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"TowerLevels\":[0,2,3]},\"BlueScore\":{"+
+			"\"FuelAuto\":10,\"Fouls\":[{\"TeamId\":973,\"RuleId\":4}]},"+
 			"\"RedCards\":{\"105\":\"yellow\"},\"BlueCards\":{}}",
 		match.Id,
 	)
@@ -79,11 +80,13 @@ func TestMatchReviewEditExistingResult(t *testing.T) {
 	assert.Equal(t, 303, recorder.Code, recorder.Body.String())
 
 	// Check for the updated scores back on the match list page.
+	// Red Score: Tower L2(20) + L3(30) + 1 Blue minor foul(5) = 55.
+	// Blue Score: FuelAuto(10) + 0 Red fouls = 10.
 	recorder = web.getHttpResponse("/match_review")
 	assert.Equal(t, 200, recorder.Code)
 	assert.Contains(t, recorder.Body.String(), ">QF4-3<")
-	assert.Contains(t, recorder.Body.String(), ">10<") // The red score
-	assert.Contains(t, recorder.Body.String(), ">42<") // The blue score
+	assert.Contains(t, recorder.Body.String(), ">55<") // The red score
+	assert.Contains(t, recorder.Body.String(), ">10<") // The blue score
 }
 
 func TestMatchReviewCreateNewResult(t *testing.T) {
@@ -111,8 +114,8 @@ func TestMatchReviewCreateNewResult(t *testing.T) {
 
 	// Update the score to something else.
 	postBody := fmt.Sprintf(
-		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"EndgameStatuses\":[0,2,1]},\"BlueScore\":{"+
-			"\"Reef\":{\"TroughFar\":21},\"Fouls\":[{\"TeamId\":973,\"RuleId\":4}]},"+
+		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"FuelAuto\":5},\"BlueScore\":{"+
+			"\"FuelAuto\":42,\"Fouls\":[{\"TeamId\":973,\"RuleId\":4}]},"+
 			"\"RedCards\":{\"105\":\"yellow\"},\"BlueCards\":{}}",
 		match.Id,
 	)
@@ -150,8 +153,8 @@ func TestMatchReviewEditCurrentMatch(t *testing.T) {
 	assert.Contains(t, recorder.Body.String(), " Qualification 352 ")
 
 	postBody := fmt.Sprintf(
-		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"EndgameStatuses\":[0,2,1]},\"BlueScore\":{"+
-			"\"Reef\":{\"TroughFar\":21},\"Fouls\":[{\"TeamId\":973,\"RuleId\":1}]},"+
+		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"TowerLevels\":[0,2,1]},\"BlueScore\":{"+
+			"\"FuelEndGame\":21,\"Fouls\":[{\"TeamId\":973,\"RuleId\":1}]},"+
 			"\"RedCards\":{\"105\":\"yellow\"},\"BlueCards\":{}}",
 		match.Id,
 	)
@@ -164,10 +167,10 @@ func TestMatchReviewEditCurrentMatch(t *testing.T) {
 	assert.Equal(t, game.MatchScheduled, match2.Status)
 	assert.Equal(
 		t,
-		[3]game.EndgameStatus{game.EndgameNone, game.EndgameShallowCage, game.EndgameParked},
-		web.arena.RedRealtimeScore.CurrentScore.EndgameStatuses,
+		[3]int{0, 2, 1},
+		web.arena.RedRealtimeScore.CurrentScore.TowerLevels,
 	)
-	assert.Equal(t, 21, web.arena.BlueRealtimeScore.CurrentScore.Reef.TroughFar)
+	assert.Equal(t, 21, web.arena.BlueRealtimeScore.CurrentScore.FuelEndGame)
 	assert.Equal(t, 0, len(web.arena.RedRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.BlueRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.RedRealtimeScore.Cards))

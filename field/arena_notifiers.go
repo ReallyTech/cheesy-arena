@@ -6,11 +6,12 @@
 package field
 
 import (
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/playoff"
 	"github.com/Team254/cheesy-arena/websocket"
-	"strconv"
 )
 
 type ArenaNotifiers struct {
@@ -85,6 +86,10 @@ func (arena *Arena) generateAllianceStationDisplayModeMessage() any {
 }
 
 func (arena *Arena) generateArenaStatusMessage() any {
+	matchId := 0
+	if arena.CurrentMatch != nil {
+		matchId = arena.CurrentMatch.Id
+	}
 	return &struct {
 		MatchId          int
 		AllianceStations map[string]*AllianceStation
@@ -98,7 +103,7 @@ func (arena *Arena) generateArenaStatusMessage() any {
 		FieldEStop            bool
 		PlcArmorBlockStatuses map[string]bool
 	}{
-		arena.CurrentMatch.Id,
+		matchId,
 		arena.AllianceStations,
 		arena.MatchState,
 		arena.checkCanStartMatch() == nil,
@@ -139,6 +144,9 @@ func (arena *Arena) generateLowerThirdMessage() any {
 }
 
 func (arena *Arena) GenerateMatchLoadMessage() any {
+	if arena.CurrentMatch == nil {
+		return nil
+	}
 	teams := make(map[string]*model.Team)
 	var allTeamIds []int
 	for station, allianceStation := range arena.AllianceStations {
@@ -154,7 +162,7 @@ func (arena *Arena) GenerateMatchLoadMessage() any {
 	var matchup *playoff.Matchup
 	redOffFieldTeams := []*model.Team{}
 	blueOffFieldTeams := []*model.Team{}
-	if arena.CurrentMatch.Type == model.Playoff {
+	if arena.CurrentMatch.Type == model.Playoff && arena.PlayoffTournament != nil {
 		matchGroup := arena.PlayoffTournament.MatchGroups()[arena.CurrentMatch.PlayoffMatchGroupId]
 		matchup, _ = matchGroup.(*playoff.Matchup)
 		redOffFieldTeamIds, blueOffFieldTeamIds, _ := arena.Database.GetOffFieldTeamIds(arena.CurrentMatch)
@@ -210,6 +218,9 @@ func (arena *Arena) generateMatchTimingMessage() any {
 }
 
 func (arena *Arena) generateRealtimeScoreMessage() any {
+	if arena.RedRealtimeScore == nil || arena.BlueRealtimeScore == nil {
+		return nil
+	}
 	fields := struct {
 		Red       *audienceAllianceScoreFields
 		Blue      *audienceAllianceScoreFields
@@ -227,6 +238,9 @@ func (arena *Arena) generateRealtimeScoreMessage() any {
 }
 
 func (arena *Arena) GenerateScorePostedMessage() any {
+	if arena.SavedMatch == nil || arena.SavedMatchResult == nil {
+		return nil
+	}
 	redScoreSummary := arena.SavedMatchResult.RedScoreSummary()
 	blueScoreSummary := arena.SavedMatchResult.BlueScoreSummary()
 	redRankingPoints := redScoreSummary.BonusRankingPoints
@@ -246,7 +260,7 @@ func (arena *Arena) GenerateScorePostedMessage() any {
 	var redDestination, blueDestination string
 	redOffFieldTeamIds := []int{}
 	blueOffFieldTeamIds := []int{}
-	if arena.SavedMatch.Type == model.Playoff {
+	if arena.SavedMatch.Type == model.Playoff && arena.PlayoffTournament != nil {
 		matchGroup := arena.PlayoffTournament.MatchGroups()[arena.SavedMatch.PlayoffMatchGroupId]
 		if matchup, ok := matchGroup.(*playoff.Matchup); ok {
 			redWins = matchup.RedAllianceWins
@@ -315,11 +329,14 @@ func (arena *Arena) GenerateScorePostedMessage() any {
 		blueWins,
 		redDestination,
 		blueDestination,
-		game.CoralBonusCoopEnabled,
+		true, // coop enabled placeholder
 	}
 }
 
 func (arena *Arena) generateScoringStatusMessage() any {
+	if arena.RedRealtimeScore == nil || arena.BlueRealtimeScore == nil {
+		return nil
+	}
 	type positionStatus struct {
 		Ready          bool
 		NumPanels      int
@@ -339,10 +356,8 @@ func (arena *Arena) generateScoringStatusMessage() any {
 	}{
 		arena.RedRealtimeScore.FoulsCommitted && arena.BlueRealtimeScore.FoulsCommitted,
 		map[string]positionStatus{
-			"red_near":  getStatusForPosition("red_near"),
-			"red_far":   getStatusForPosition("red_far"),
-			"blue_near": getStatusForPosition("blue_near"),
-			"blue_far":  getStatusForPosition("blue_far"),
+			"red":  getStatusForPosition("red"),
+			"blue": getStatusForPosition("blue"),
 		},
 	}
 }

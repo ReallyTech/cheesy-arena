@@ -8,17 +8,17 @@ package game
 import "math/rand"
 
 type RankingFields struct {
-	RankingPoints      int
-	CoopertitionPoints int
-	MatchPoints        int
-	AutoPoints         int
-	BargePoints        int
-	Random             float64
-	Wins               int
-	Losses             int
-	Ties               int
-	Disqualifications  int
-	Played             int
+	RankingPoints     int
+	FuelPoints        int
+	TowerPoints       int
+	AutoFuelPoints    int
+	AutoTowerPoints   int
+	Random            float64
+	Wins              int
+	Losses            int
+	Ties              int
+	Disqualifications int
+	Played            int
 }
 
 type Ranking struct {
@@ -55,12 +55,10 @@ func (fields *RankingFields) AddScoreSummary(ownScore *ScoreSummary, opponentSco
 	fields.RankingPoints += ownScore.BonusRankingPoints
 
 	// Assign tiebreaker points.
-	if ownScore.CoopertitionBonus {
-		fields.CoopertitionPoints++
-	}
-	fields.MatchPoints += ownScore.MatchPoints
-	fields.AutoPoints += ownScore.AutoPoints
-	fields.BargePoints += ownScore.BargePoints
+	fields.FuelPoints += ownScore.FuelPoints
+	fields.TowerPoints += ownScore.TowerPoints
+	fields.AutoFuelPoints += ownScore.AutoFuelPoints
+	fields.AutoTowerPoints += ownScore.AutoTowerPoints
 }
 
 // Helper function to implement the required interface for Sort.
@@ -74,20 +72,25 @@ func (rankings Rankings) Less(i, j int) bool {
 	b := rankings[j]
 
 	// Use cross-multiplication to keep it in integer math.
+	// 1. Average RP
 	if a.RankingPoints*b.Played == b.RankingPoints*a.Played {
-		if a.CoopertitionPoints*b.Played == b.CoopertitionPoints*a.Played {
-			if a.MatchPoints*b.Played == b.MatchPoints*a.Played {
-				if a.AutoPoints*b.Played == b.AutoPoints*a.Played {
-					if a.BargePoints*b.Played == b.BargePoints*a.Played {
+		// 2. Average Fuel Points
+		if a.FuelPoints*b.Played == b.FuelPoints*a.Played {
+			// 3. Average Tower Points
+			if a.TowerPoints*b.Played == b.TowerPoints*a.Played {
+				// 4. Average Auto Fuel Points
+				if a.AutoFuelPoints*b.Played == b.AutoFuelPoints*a.Played {
+					// 5. Average Auto Tower Points
+					if a.AutoTowerPoints*b.Played == b.AutoTowerPoints*a.Played {
 						return a.Random > b.Random
 					}
-					return a.BargePoints*b.Played > b.BargePoints*a.Played
+					return a.AutoTowerPoints*b.Played > b.AutoTowerPoints*a.Played
 				}
-				return a.AutoPoints*b.Played > b.AutoPoints*a.Played
+				return a.AutoFuelPoints*b.Played > b.AutoFuelPoints*a.Played
 			}
-			return a.MatchPoints*b.Played > b.MatchPoints*a.Played
+			return a.TowerPoints*b.Played > b.TowerPoints*a.Played
 		}
-		return a.CoopertitionPoints*b.Played > b.CoopertitionPoints*a.Played
+		return a.FuelPoints*b.Played > b.FuelPoints*a.Played
 	}
 	return a.RankingPoints*b.Played > b.RankingPoints*a.Played
 }

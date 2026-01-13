@@ -6,35 +6,27 @@
 package game
 
 type Score struct {
-	RobotsBypassed  [3]bool
-	LeaveStatuses   [3]bool
-	Reef            Reef
-	BargeAlgae      int
-	ProcessorAlgae  int
-	EndgameStatuses [3]EndgameStatus
-	Fouls           []Foul
-	PlayoffDq       bool
+	RobotsBypassed [3]bool
+	FuelAuto       int
+	FuelTransition int
+	FuelShift1     int
+	FuelShift2     int
+	FuelShift3     int
+	FuelShift4     int
+	FuelEndGame    int
+	TowerLevels    [3]int
+	TowerIsAuto    [3]bool
+	Fouls          []Foul
+	PlayoffDq      bool
 }
 
 // Game-specific settings that can be changed via the settings.
-var AutoBonusCoralThreshold = 1
-var CoralBonusPerLevelThreshold = 7
-var CoralBonusCoopEnabled = true
-var BargeBonusPointThreshold = 16
-var IncludeAlgaeInBargeBonus = false
-
-// Represents the state of a robot at the end of the match.
-type EndgameStatus int
-
-const (
-	EndgameNone EndgameStatus = iota
-	EndgameParked
-	EndgameShallowCage
-	EndgameDeepCage
-)
+var FuelEnergizedThreshold = 100
+var FuelSuperchargedThreshold = 360
+var TowerTraversalThreshold = 2
 
 // Summarize calculates and returns the summary fields used for ranking and display.
-func (score *Score) Summarize(opponentScore *Score) *ScoreSummary {
+func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *ScoreSummary {
 	summary := new(ScoreSummary)
 
 	// Leave the score at zero if the alliance was disqualified.
@@ -42,128 +34,130 @@ func (score *Score) Summarize(opponentScore *Score) *ScoreSummary {
 		return summary
 	}
 
-	// Calculate autonomous period points.
-	for _, status := range score.LeaveStatuses {
-		if status {
-			summary.LeavePoints += 3
-		}
-	}
-	autoCoralPoints := score.Reef.AutoCoralPoints()
-	summary.AutoPoints = summary.LeavePoints + autoCoralPoints
+	// HUB Activation Logic
+	// Always Active: Auto, Transition Shift, End Game
+	// Shifts 1-4: Alternating based on Auto Winner
 
-	summary.NumCoral = score.Reef.AutoCoralCount() + score.Reef.TeleopCoralCount()
-	summary.CoralPoints = autoCoralPoints + score.Reef.TeleopCoralPoints()
-	summary.NumAlgae = score.BargeAlgae + score.ProcessorAlgae
-	summary.AlgaePoints = 4*score.BargeAlgae + 6*score.ProcessorAlgae
+	selfAutoFuel := score.FuelAuto
+	oppAutoFuel := opponentScore.FuelAuto
 
-	// Calculate endgame points.
-	for _, status := range score.EndgameStatuses {
-		switch status {
-		case EndgameParked:
-			summary.BargePoints += 2
-		case EndgameShallowCage:
-			summary.BargePoints += 6
-		case EndgameDeepCage:
-			summary.BargePoints += 12
-		default:
+	selfActiveShift1 := true
+	if selfAutoFuel > oppAutoFuel {
+		selfActiveShift1 = false // Auto winner is inactive in Shift 1
+	} else if oppAutoFuel > selfAutoFuel {
+		selfActiveShift1 = true // Auto loser is active in Shift 1
+	} else {
+		// Tied: Randomly select one. We use MatchId and IsRed for a deterministic "random" choice.
+		if (matchId%2 == 0) == isRed {
+			selfActiveShift1 = false
+		} else {
+			selfActiveShift1 = true
 		}
 	}
 
-	summary.MatchPoints = summary.LeavePoints + summary.CoralPoints + summary.AlgaePoints + summary.BargePoints
+	selfActiveShift2 := !selfActiveShift1
+	selfActiveShift3 := selfActiveShift1
+	selfActiveShift4 := !selfActiveShift1
+
+	// Calculate Fuel points
+	summary.FuelPoints = score.FuelAuto + score.FuelTransition + score.FuelEndGame
+	summary.TotalFuel = score.FuelAuto + score.FuelTransition + score.FuelShift1 + score.FuelShift2 + score.FuelShift3 + score.FuelShift4 + score.FuelEndGame
+	if selfActiveShift1 {
+		summary.FuelPoints += score.FuelShift1
+	}
+	if selfActiveShift2 {
+		summary.FuelPoints += score.FuelShift2
+	}
+	if selfActiveShift3 {
+		summary.FuelPoints += score.FuelShift3
+	}
+	if selfActiveShift4 {
+		summary.FuelPoints += score.FuelShift4
+	}
+
+	// Calculate Tower points
+	autoLevel1Count := 0
+	for i, level := range score.TowerLevels {
+		if level == 1 && score.TowerIsAuto[i] {
+			autoLevel1Count++
+		}
+	}
+	if autoLevel1Count > 2 {
+		autoLevel1Count = 2
+	}
+	summary.AutoFuelPoints = score.FuelAuto
+	summary.AutoTowerPoints = autoLevel1Count * 15
+	summary.AutoPoints = summary.AutoFuelPoints + summary.AutoTowerPoints
+	summary.TowerPoints = summary.AutoTowerPoints
+	summary.TotalTowers = 0
+
+	for i, level := range score.TowerLevels {
+		if level > 0 {
+			summary.TotalTowers++
+		}
+		if score.TowerIsAuto[i] {
+			continue // Already counted in AutoTowerPoints if L1
+		}
+		switch level {
+		case 2:
+			summary.TowerPoints += 20
+		case 3:
+			summary.TowerPoints += 30
+		}
+	}
+
+	summary.MatchPoints = summary.FuelPoints + summary.TowerPoints
 
 	// Calculate penalty points.
 	for _, foul := range opponentScore.Fouls {
 		summary.FoulPoints += foul.PointValue()
-		// Store the number of major fouls since it is used to break ties in playoffs.
-		if foul.IsMajor {
-			summary.NumOpponentMajorFouls++
-		}
-
-		rule := foul.Rule()
-		if rule != nil {
-			// Check for the opponent fouls that automatically trigger a ranking point.
-			if rule.IsRankingPoint {
-				switch rule.RuleNumber {
-				case "G410":
-					summary.CoralBonusRankingPoint = true
-				case "G418":
-					summary.BargeBonusRankingPoint = true
-				case "G428":
-					summary.BargeBonusRankingPoint = true
-				}
-			}
-		}
 	}
 
 	summary.Score = summary.MatchPoints + summary.FoulPoints
 
-	// Calculate bonus ranking points.
-	// Autonomous bonus ranking point.
-	allRobotsLeft := true
-	for i, left := range score.LeaveStatuses {
-		if !left && !score.RobotsBypassed[i] {
-			allRobotsLeft = false
-			break
-		}
-	}
-	if allRobotsLeft && score.Reef.isAutoBonusCoralThresholdMet() {
-		summary.AutoBonusRankingPoint = true
-	}
-
-	// Coral bonus ranking point.
-	summary.NumCoralLevels = score.Reef.countCoralBonusSatisfiedLevels()
-	summary.NumCoralLevelsGoal = 4
-	if CoralBonusCoopEnabled {
-		summary.CoopertitionCriteriaMet = score.ProcessorAlgae >= 2
-		summary.CoopertitionBonus = summary.CoopertitionCriteriaMet && opponentScore.ProcessorAlgae >= 2
-		if summary.CoopertitionBonus {
-			summary.NumCoralLevelsGoal = 3
-		}
-	}
-	if summary.NumCoralLevels >= summary.NumCoralLevelsGoal {
-		summary.CoralBonusRankingPoint = true
-	}
-
-	// Barge bonus ranking point.
-	bargePointsForBonus := summary.BargePoints
-	if IncludeAlgaeInBargeBonus {
-		bargePointsForBonus += summary.AlgaePoints
-	}
-	if bargePointsForBonus >= BargeBonusPointThreshold {
-		summary.BargeBonusRankingPoint = true
-	}
-
-	// Check for G206 violation.
-	for _, foul := range score.Fouls {
-		if foul.Rule() != nil && foul.Rule().RuleNumber == "G206" {
-			summary.CoralBonusRankingPoint = false
-			summary.BargeBonusRankingPoint = false
-			break
-		}
-	}
-
-	// Add up the bonus ranking points.
-	if summary.AutoBonusRankingPoint {
+	// Ranking Points
+	if summary.TotalFuel >= FuelEnergizedThreshold {
+		summary.FuelEnergizedRankingPoint = true
 		summary.BonusRankingPoints++
 	}
-	if summary.CoralBonusRankingPoint {
+	if summary.TotalFuel >= FuelSuperchargedThreshold {
+		summary.FuelSuperchargedRankingPoint = true
 		summary.BonusRankingPoints++
 	}
-	if summary.BargeBonusRankingPoint {
+	if summary.TotalTowers >= TowerTraversalThreshold {
+		summary.TowerTraversalRankingPoint = true
 		summary.BonusRankingPoints++
 	}
 
 	return summary
 }
 
+func (score *Score) FuelTotal() int {
+	return score.FuelAuto + score.FuelTransition + score.FuelShift1 + score.FuelShift2 + score.FuelShift3 + score.FuelShift4 + score.FuelEndGame
+}
+
+func (score *Score) TowerLevelCount(level int) int {
+	count := 0
+	for _, l := range score.TowerLevels {
+		if l == level {
+			count++
+		}
+	}
+	return count
+}
+
 // Equals returns true if and only if all fields of the two scores are equal.
 func (score *Score) Equals(other *Score) bool {
 	if score.RobotsBypassed != other.RobotsBypassed ||
-		score.LeaveStatuses != other.LeaveStatuses ||
-		score.Reef != other.Reef ||
-		score.BargeAlgae != other.BargeAlgae ||
-		score.ProcessorAlgae != other.ProcessorAlgae ||
-		score.EndgameStatuses != other.EndgameStatuses ||
+		score.FuelAuto != other.FuelAuto ||
+		score.FuelTransition != other.FuelTransition ||
+		score.FuelShift1 != other.FuelShift1 ||
+		score.FuelShift2 != other.FuelShift2 ||
+		score.FuelShift3 != other.FuelShift3 ||
+		score.FuelShift4 != other.FuelShift4 ||
+		score.FuelEndGame != other.FuelEndGame ||
+		score.TowerLevels != other.TowerLevels ||
+		score.TowerIsAuto != other.TowerIsAuto ||
 		score.PlayoffDq != other.PlayoffDq ||
 		len(score.Fouls) != len(other.Fouls) {
 		return false

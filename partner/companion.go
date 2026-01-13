@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -79,7 +80,7 @@ func (client *CompanionClient) sendCommand(command string) {
 		return
 	}
 
-	address := fmt.Sprintf("%s:%d", client.address, client.port)
+	address := net.JoinHostPort(client.address, strconv.Itoa(client.port))
 	conn, err := net.DialTimeout("tcp", address, companionConnectTimeoutMs*time.Millisecond)
 	if err != nil {
 		log.Printf("Failed to connect to Companion at %s: %v", address, err)

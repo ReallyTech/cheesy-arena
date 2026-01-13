@@ -7,50 +7,39 @@ package game
 
 func TestScore1() *Score {
 	fouls := []Foul{
-		{1, true, 25, 16},
-		{2, false, 1868, 13},
-		{3, false, 1868, 13},
-		{4, true, 25, 15},
-		{5, true, 25, 15},
-		{6, true, 25, 15},
-		{7, true, 25, 15},
+		{1, true, 254, 1},
+		{2, false, 254, 2},
 	}
 	return &Score{
 		RobotsBypassed: [3]bool{false, false, true},
-		LeaveStatuses:  [3]bool{true, true, false},
-		Reef: Reef{
-			AutoBranches:   [3][12]bool{{true}},
-			Branches:       [3][12]bool{{true, true}, {true, true, true}},
-			AutoTroughNear: 0,
-			AutoTroughFar:  1,
-			TroughNear:     3,
-			TroughFar:      4,
-		},
-		BargeAlgae:      7,
-		ProcessorAlgae:  2,
-		EndgameStatuses: [3]EndgameStatus{EndgameParked, EndgameNone, EndgameDeepCage},
-		Fouls:           fouls,
-		PlayoffDq:       false,
+		FuelAuto:       20,
+		FuelTransition: 10,
+		FuelShift1:     30,
+		FuelShift2:     30,
+		FuelShift3:     30,
+		FuelShift4:     30,
+		FuelEndGame:    20,
+		TowerLevels:    [3]int{1, 2, 0},
+		TowerIsAuto:    [3]bool{true, false, false},
+		Fouls:          fouls,
+		PlayoffDq:      false,
 	}
 }
 
 func TestScore2() *Score {
 	return &Score{
 		RobotsBypassed: [3]bool{false, false, false},
-		LeaveStatuses:  [3]bool{false, true, false},
-		Reef: Reef{
-			AutoBranches:   [3][12]bool{{}, {}, {true, true, true, true}},
-			Branches:       [3][12]bool{{true, true, true}, {true, true, true, true, true}, {true, true, true}},
-			AutoTroughNear: 2,
-			AutoTroughFar:  1,
-			TroughNear:     10,
-			TroughFar:      5,
-		},
-		BargeAlgae:      9,
-		ProcessorAlgae:  1,
-		EndgameStatuses: [3]EndgameStatus{EndgameDeepCage, EndgameShallowCage, EndgameShallowCage},
-		Fouls:           []Foul{},
-		PlayoffDq:       false,
+		FuelAuto:       10,
+		FuelTransition: 5,
+		FuelShift1:     20,
+		FuelShift2:     20,
+		FuelShift3:     20,
+		FuelShift4:     20,
+		FuelEndGame:    10,
+		TowerLevels:    [3]int{1, 1, 3},
+		TowerIsAuto:    [3]bool{true, true, false},
+		Fouls:          []Foul{},
+		PlayoffDq:      false,
 	}
 }
 

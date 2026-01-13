@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -50,7 +51,7 @@ func (client *BlackmagicClient) StopRecording() {
 func (client *BlackmagicClient) sendCommand(command string) {
 	for _, address := range client.deviceAddresses {
 		conn, err := net.DialTimeout(
-			"tcp", fmt.Sprintf("%s:%d", address, blackmagicPort), blackmagicConnectTimeoutMs*time.Millisecond,
+			"tcp", net.JoinHostPort(address, strconv.Itoa(blackmagicPort)), blackmagicConnectTimeoutMs*time.Millisecond,
 		)
 		if err != nil {
 			log.Printf("Failed to connect to Blackmagic device at %s: %v", address, err)

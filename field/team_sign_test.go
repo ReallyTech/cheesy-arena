@@ -4,11 +4,14 @@
 package field
 
 import (
+	"fmt"
+	"image/color"
+	"testing"
+	"time"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/stretchr/testify/assert"
-	"image/color"
-	"testing"
 )
 
 func TestTeamSign_GenerateInMatchRearText(t *testing.T) {
@@ -16,21 +19,20 @@ func TestTeamSign_GenerateInMatchRearText(t *testing.T) {
 	arena.RedRealtimeScore.CurrentScore = *game.TestScore1()
 	arena.BlueRealtimeScore.CurrentScore = *game.TestScore2()
 
-	assert.Equal(t, "01:23 R080-B162 1/4", generateInMatchTeamRearText(arena, true, "01:23"))
-	assert.Equal(t, "01:23 B162-R080 1/4", generateInMatchTeamRearText(arena, false, "01:23"))
-	assert.Equal(t, "1-07 2-02 3-03 4-00", generateInMatchTimerRearText(arena, true))
-	assert.Equal(t, "1-15 2-03 3-05 4-03", generateInMatchTimerRearText(arena, false))
-	arena.BlueRealtimeScore.CurrentScore.Reef.Branches[2] = [12]bool{true, true, true, true, true, true, true, true}
-	arena.BlueRealtimeScore.CurrentScore.ProcessorAlgae = 2
-	assert.Equal(t, "00:59 R080-B195 1/3", generateInMatchTeamRearText(arena, true, "00:59"))
-	assert.Equal(t, "00:59 B195-R080 2/3", generateInMatchTeamRearText(arena, false, "00:59"))
-	assert.Equal(t, "1-07 2-02 3-03 4-00", generateInMatchTimerRearText(arena, true))
-	assert.Equal(t, "1-15 2-03 3-05 4-08", generateInMatchTimerRearText(arena, false))
+	assert.Equal(t, "01:23 R110-B085 F:170/100", generateInMatchTeamRearText(arena, true, "01:23"))
+	assert.Equal(t, "01:23 B085-R110 F:105/100", generateInMatchTeamRearText(arena, false, "01:23"))
+	assert.Equal(t, "F-A:20 S1:30 S2:30 S3:30 S4:30", generateInMatchTimerRearText(arena, true))
+	assert.Equal(t, "F-A:10 S1:20 S2:20 S3:20 S4:20", generateInMatchTimerRearText(arena, false))
+	arena.BlueRealtimeScore.CurrentScore.FuelAuto = 25
+	assert.Equal(t, "00:59 R110-B100 F:170/100", generateInMatchTeamRearText(arena, true, "00:59"))
+	assert.Equal(t, "00:59 B100-R110 F:120/100", generateInMatchTeamRearText(arena, false, "00:59"))
+	assert.Equal(t, "F-A:20 S1:30 S2:30 S3:30 S4:30", generateInMatchTimerRearText(arena, true))
+	assert.Equal(t, "F-A:25 S1:20 S2:20 S3:20 S4:20", generateInMatchTimerRearText(arena, false))
 
 	// Check that RP progress is hidden for playoff matches.
 	arena.CurrentMatch.Type = model.Playoff
-	assert.Equal(t, "00:45 R080-B195 ", generateInMatchTeamRearText(arena, true, "00:45"))
-	assert.Equal(t, "00:45 B195-R080 ", generateInMatchTeamRearText(arena, false, "00:45"))
+	assert.Equal(t, "00:45 R110-B100 ", generateInMatchTeamRearText(arena, true, "00:45"))
+	assert.Equal(t, "00:45 B100-R110 ", generateInMatchTeamRearText(arena, false, "00:45"))
 }
 
 func TestTeamSign_Timer(t *testing.T) {
@@ -182,9 +184,9 @@ func TestTeamSign_TeamNumber(t *testing.T) {
 	arena.AllianceStationDisplayMode = "logo"
 	arena.AudienceDisplayMode = "allianceSelection"
 	arena.AllianceSelectionShowTimer = false
-	assertSign(true, " 2025", redColor, "1503      Connect PC")
+	assertSign(true, fmt.Sprintf("%5d", time.Now().Year()), redColor, "1503      Connect PC")
 	arena.AllianceSelectionShowTimer = true
-	assertSign(false, " 2025", blueColor, "1503      Connect PC")
+	assertSign(false, fmt.Sprintf("%5d", time.Now().Year()), blueColor, "1503      Connect PC")
 	arena.AllianceStationDisplayMode = "blank"
 	assertSign(false, "     ", whiteColor, "")
 }

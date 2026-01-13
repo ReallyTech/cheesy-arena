@@ -46,46 +46,26 @@ const showFoulsDialog = function () {
 const closeFoulsDialog = function () {
   foulsDialog.close();
 }
-const closeFoulsDialogIfOutside = function (event) {
+$(document).on("click", "#fouls-dialog", function (event) {
   if (event.target === foulsDialog) {
     closeFoulsDialog();
   }
-}
+});
 
 // Handles a websocket message to update the teams for the current match.
 const handleMatchLoad = function (data) {
   $("#matchName").text(data.Match.LongName);
-  if (alliance === "red") {
-    $(".team-1 .team-num").text(data.Match.Red1);
-    $(".team-2 .team-num").text(data.Match.Red2);
-    $(".team-3 .team-num").text(data.Match.Red3);
-  } else {
-    $(".team-1 .team-num").text(data.Match.Blue1);
-    $(".team-2 .team-num").text(data.Match.Blue2);
-    $(".team-3 .team-num").text(data.Match.Blue3);
+  const teams = (alliance === "red") ? [data.Match.Red1, data.Match.Red2, data.Match.Red3] : [data.Match.Blue1, data.Match.Blue2, data.Match.Blue3];
+  for (let i = 0; i < 3; i++) {
+    const pos = i + 1;
+    $(`#tower-auto-${pos} .team-num`).text("Team " + (teams[i] || ""));
+    $(`#tower-teleop-${pos} .team-num`).text("Team " + (teams[i] || ""));
   }
 };
 
-const renderLocalFoulCounts = function () {
-  for (const foulType in localFoulCounts) {
-    const count = localFoulCounts[foulType];
-    $(`#foul-${foulType} .fouls-local`).text(count);
-  }
-}
-
-const resetFoulCounts = function () {
-  localFoulCounts["red-minor"] = 0;
-  localFoulCounts["blue-minor"] = 0;
-  localFoulCounts["red-major"] = 0;
-  localFoulCounts["blue-major"] = 0;
-  renderLocalFoulCounts();
-}
-
-const addFoul = function (alliance, isMajor) {
-  const foulType = `${alliance}-${isMajor ? "major" : "minor"}`;
-  localFoulCounts[foulType] += 1;
+const addFoul = function (alliance, type) {
+  const isMajor = type === "tech";
   websocket.send("addFoul", {Alliance: alliance, IsMajor: isMajor});
-  renderLocalFoulCounts();
 }
 
 // Handles a websocket message to update the match status.
@@ -96,7 +76,6 @@ const handleMatchTime = function (data) {
       scoringAvailable = true;
       commitAvailable = false;
       inTeleop = false;
-      editingAuto = false;
       committed = false;
       break;
     case "TELEOP_PERIOD":
@@ -116,153 +95,112 @@ const handleMatchTime = function (data) {
       scoringAvailable = false;
       commitAvailable = false;
       inTeleop = false;
-      editingAuto = false;
       committed = false;
-      resetFoulCounts();
   }
   updateUIMode();
 };
-
-// Switch in and out of autonomous editing mode
-const toggleEditAuto = function () {
-  editingAuto = !editingAuto;
-  updateUIMode();
-}
-
-// Clear any local ephemeral state that is not maintained by the server
-const resetLocalState = function () {
-  committed = false;
-  editingAuto = false;
-  updateUIMode();
-}
 
 // Refresh which UI controls are enabled/disabled
 const updateUIMode = function () {
-  $(".scoring-button").prop('disabled', !scoringAvailable);
-  $(".scoring-teleop-button").prop('disabled', !(inTeleop && scoringAvailable));
+  $(".team-button").prop('disabled', !scoringAvailable);
+  $("#tower-teleop .team-button").prop('disabled', !inTeleop || !scoringAvailable);
+  $("#tower-auto .team-button").prop('disabled', inTeleop || !scoringAvailable);
+  $(".counter button").prop('disabled', !scoringAvailable);
   $("#commit").prop('disabled', !commitAvailable);
-  $("#edit-auto").prop('disabled', !(inTeleop && scoringAvailable));
-  $(".container").attr("data-scoring-auto", (!inTeleop || editingAuto) && scoringAvailable);
+  $("#fouls-button").prop('disabled', !scoringAvailable);
   $(".container").attr("data-in-teleop", inTeleop && scoringAvailable);
-  $("#edit-auto").text(editingAuto ? "Save Auto" : "Edit Auto");
 }
-
-const endgameStatusNames = [
-  "None",
-  "Park",
-  "Shallow",
-  "Deep",
-];
 
 // Handles a websocket message to update the realtime scoring fields.
 const handleRealtimeScore = function (data) {
-  let realtimeScore;
-  if (alliance === "red") {
-    realtimeScore = data.Red;
-  } else {
-    realtimeScore = data.Blue;
-  }
+  let realtimeScore = (alliance === "red") ? data.Red : data.Blue;
   const score = realtimeScore.Score;
 
   for (let i = 0; i < 3; i++) {
-    const i1 = i + 1;
-    $(`#auto-status-${i1} > .team-text`).text(score.LeaveStatuses[i] ? "Leave" : "None");
-    $(`#auto-status-${i1}`).attr("data-selected", score.LeaveStatuses[i]);
-    $(`#endgame-status-${i1} > .team-text`).text(endgameStatusNames[score.EndgameStatuses[i]]);
-    $(`#endgame-status-${i1}`).attr("data-selected", endgameStatusNames[score.EndgameStatuses[i]] != "None");
-    for (let j = 0; j < endgameStatusNames.length; j++) {
-      $(`#endgame-input-${i1} .endgame-${j}`).attr("data-selected", j == score.EndgameStatuses[i]);
+    const pos = i + 1;
+    const level = score.TowerLevels[i];
+    const isAuto = score.TowerIsAuto[i];
+
+    let levelText = "None";
+    if (level === 1) levelText = "Level 1";
+    if (level === 2) levelText = "Level 2";
+    if (level === 3) levelText = "Level 3";
+
+    if (isAuto && level === 1) {
+      $(`#tower-auto-${pos}-status`).text("Level 1");
+      $(`#tower-auto-${pos}`).attr("data-selected", "true");
+      $(`#tower-teleop-${pos}-status`).text("None");
+      $(`#tower-teleop-${pos}`).attr("data-selected", "false");
+    } else {
+      $(`#tower-auto-${pos}-status`).text("None");
+      $(`#tower-auto-${pos}`).attr("data-selected", "false");
+      $(`#tower-teleop-${pos}-status`).text(levelText);
+      $(`#tower-teleop-${pos}`).attr("data-selected", level > 0 ? "true" : "false");
     }
   }
 
-  for (let i = 0; i < 12; i++) {
-    const i1 = i + 1;
-    for (let j = 0; j < 3; j++) {
-      const j2 = j + 2;
-      $(`#reef-column-${i1}`).attr(`data-l${j2}-scored`, score.Reef.Branches[j][i]);
-      $(`#reef-column-${i1}`).attr(`data-l${j2}-auto-scored`, score.Reef.AutoBranches[j][i]);
-    }
-  }
-
-  const l1Total = score.Reef.TroughNear + score.Reef.TroughFar;
-  $("#l1-total-count").text(l1Total);
-  
-  $(`#barge .counter-value`).text(score.BargeAlgae);
-  $(`#processor .counter-value`).text(score.ProcessorAlgae);
-
-  if (nearSide) {
-    $(`#trough .counter-value`).text(score.Reef.TroughNear);
-    $(`#trough .counter-auto-value`).text(score.Reef.AutoTroughNear);
-  } else {
-    $(`#trough .counter-value`).text(score.Reef.TroughFar);
-    $(`#trough .counter-auto-value`).text(score.Reef.AutoTroughFar);
-  }
-
-  redFouls = data.Red.Score.Fouls || [];
-  blueFouls = data.Blue.Score.Fouls || [];
-  $(`#foul-blue-minor .fouls-global`).text(blueFouls.filter(foul => !foul.IsMajor).length)
-  $(`#foul-blue-major .fouls-global`).text(blueFouls.filter(foul => foul.IsMajor).length)
-  $(`#foul-red-minor .fouls-global`).text(redFouls.filter(foul => !foul.IsMajor).length)
-  $(`#foul-red-major .fouls-global`).text(redFouls.filter(foul => foul.IsMajor).length)
+  $(`#value-fuel-auto`).text(score.FuelAuto);
+  $(`#value-fuel-transition`).text(score.FuelTransition);
+  $(`#value-fuel-shift1`).text(score.FuelShift1);
+  $(`#value-fuel-shift2`).text(score.FuelShift2);
+  $(`#value-fuel-shift3`).text(score.FuelShift3);
+  $(`#value-fuel-shift4`).text(score.FuelShift4);
+  $(`#value-fuel-endgame`).text(score.FuelEndGame);
 };
 
-// Websocket message senders for various buttons
-const handleCounterClick = function (command, adjustment) {
-  websocket.send(command, {
-    Adjustment: adjustment,
-    Current: true,
-    Autonomous: !inTeleop || editingAuto,
-    NearSide: nearSide
+const cycleTowerAuto = function (index) {
+  // Toggle between level 0 and level 1 (auto)
+  let level = $(`#tower-auto-${index}-status`).text() === "Level 1" ? 0 : 1;
+  websocket.send("tower", {
+    TeamPosition: index,
+    Level: level,
+    IsAuto: level === 1
   });
 }
-const handleLeaveClick = function (teamPosition) {
-  websocket.send("leave", {TeamPosition: teamPosition});
-}
-const handleEndgameClick = function (teamPosition, endgameStatus) {
-  websocket.send("endgame", {TeamPosition: teamPosition, EndgameStatus: endgameStatus});
-}
-const handleReefClick = function (reefPosition, reefLevel) {
-  websocket.send("reef", {
-    ReefPosition: reefPosition,
-    ReefLevel: reefLevel,
-    Current: !editingAuto,
-    Autonomous: !inTeleop || editingAuto,
-    NearSide: nearSide
+
+const cycleTowerTeleop = function (index) {
+  // Toggle between 0 -> 2 -> 3 -> 0
+  let current = $(`#tower-teleop-${index}-status`).text();
+  let level = 0;
+  if (current === "None") level = 2;
+  else if (current === "Level 2") level = 3;
+  else level = 0;
+
+  websocket.send("tower", {
+    TeamPosition: index,
+    Level: level,
+    IsAuto: false
   });
+}
+
+const incrementCounter = function (id) {
+  let shift = id.replace("fuel-", "");
+  websocket.send("fuel", {Shift: shift, Adjustment: 1});
+}
+
+const decrementCounter = function (id) {
+  let shift = id.replace("fuel-", "");
+  websocket.send("fuel", {Shift: shift, Adjustment: -1});
 }
 
 // Sends a websocket message to indicate that the score for this alliance is ready.
 const commitMatchScore = function () {
   websocket.send("commitMatch");
-
   committed = true;
-  scoringAvailable = false;
-  commitAvailable = false;
-  inTeleop = false;
-  editingAuto = false;
   updateUIMode();
 };
 
 $(function () {
-  position = window.location.href.split("/").slice(-1)[0];
-  [alliance, side] = position.split("_");
+  const pathParts = window.location.pathname.split("/");
+  alliance = pathParts[pathParts.length - 1]; // "red" or "blue"
   $(".container").attr("data-alliance", alliance);
-  nearSide = side === "near";
-  resetLocalState();
-
+  
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/panels/scoring/" + position + "/websocket", {
-    matchLoad: function (event) {
-      handleMatchLoad(event.data);
-    },
-    matchTime: function (event) {
-      handleMatchTime(event.data);
-    },
-    realtimeScore: function (event) {
-      handleRealtimeScore(event.data);
-    },
-    resetLocalState: function (event) {
-      resetLocalState();
-    },
+  websocket = new CheesyWebsocket("/panels/scoring/" + alliance + "/websocket", {
+    matchLoad: function (event) { handleMatchLoad(event.data); },
+    matchTime: function (event) { handleMatchTime(event.data); },
+    realtimeScore: function (event) { handleRealtimeScore(event.data); },
+    resetLocalState: function (event) { committed = false; updateUIMode(); },
   });
 });
+

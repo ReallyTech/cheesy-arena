@@ -272,11 +272,9 @@ func (arena *Arena) LoadSettings() error {
 	game.UpdateMatchSounds()
 	arena.MatchTimingNotifier.Notify()
 
-	game.AutoBonusCoralThreshold = settings.AutoBonusCoralThreshold
-	game.CoralBonusPerLevelThreshold = settings.CoralBonusPerLevelThreshold
-	game.CoralBonusCoopEnabled = settings.CoralBonusCoopEnabled
-	game.BargeBonusPointThreshold = settings.BargeBonusPointThreshold
-	game.IncludeAlgaeInBargeBonus = settings.IncludeAlgaeInBargeBonus
+	game.FuelEnergizedThreshold = settings.FuelEnergizedThreshold
+	game.FuelSuperchargedThreshold = settings.FuelSuperchargedThreshold
+	game.TowerTraversalThreshold = settings.TowerTraversalThreshold
 
 	// Reconstruct the playoff tournament in memory.
 	if err = arena.CreatePlayoffTournament(); err != nil {
@@ -773,10 +771,7 @@ func (arena *Arena) checkEndgameStart(matchTimeSec float64) {
 	}
 
 	// Calculate the time when endgame warning should start
-	endgameStartTime := float64(
-		game.MatchTiming.AutoDurationSec + game.MatchTiming.PauseDurationSec +
-			game.MatchTiming.TeleopDurationSec - game.MatchTiming.WarningRemainingDurationSec,
-	)
+	endgameStartTime := game.GetDurationToTeleopEnd().Seconds() - float64(game.MatchTiming.WarningRemainingDurationSec)
 
 	// Check if we've crossed the endgame threshold and haven't already triggered it
 	if matchTimeSec >= endgameStartTime && arena.LastMatchTimeSec < endgameStartTime {
@@ -809,12 +804,20 @@ func (arena *Arena) Run() {
 
 // Calculates the red alliance score summary for the given realtime snapshot.
 func (arena *Arena) RedScoreSummary() *game.ScoreSummary {
-	return arena.RedRealtimeScore.CurrentScore.Summarize(&arena.BlueRealtimeScore.CurrentScore)
+	matchId := 0
+	if arena.CurrentMatch != nil {
+		matchId = arena.CurrentMatch.Id
+	}
+	return arena.RedRealtimeScore.CurrentScore.Summarize(&arena.BlueRealtimeScore.CurrentScore, true, matchId)
 }
 
 // Calculates the blue alliance score summary for the given realtime snapshot.
 func (arena *Arena) BlueScoreSummary() *game.ScoreSummary {
-	return arena.BlueRealtimeScore.CurrentScore.Summarize(&arena.RedRealtimeScore.CurrentScore)
+	matchId := 0
+	if arena.CurrentMatch != nil {
+		matchId = arena.CurrentMatch.Id
+	}
+	return arena.BlueRealtimeScore.CurrentScore.Summarize(&arena.RedRealtimeScore.CurrentScore, false, matchId)
 }
 
 // Checks that the given teams are present in the database, allowing team ID 0 which indicates an empty spot.
@@ -1136,43 +1139,33 @@ func (arena *Arena) handlePlcInputOutput() {
 	// Get all the game-specific inputs and update the score.
 	if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod ||
 		inGracePeriod {
-		redScore.ProcessorAlgae, blueScore.ProcessorAlgae = arena.Plc.GetProcessorCounts()
+		redScore.FuelAuto, blueScore.FuelAuto = arena.Plc.GetFuelCounts()
 	}
 	if !oldRedScore.Equals(redScore) || !oldBlueScore.Equals(blueScore) {
 		arena.RealtimeScoreNotifier.Notify()
 	}
 
-	// Handle the truss lights.
+	// Handle the tower lights.
 	if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod {
-		warningSequenceActive, lights := trussLightWarningSequence(arena.MatchTimeSec())
+		warningSequenceActive, lights := towerLightWarningSequence(arena.MatchTimeSec())
 		if warningSequenceActive {
-			arena.Plc.SetTrussLights(lights, lights)
+			arena.Plc.SetTowerLights(lights, lights)
 		} else {
-			if !game.CoralBonusCoopEnabled || arena.CurrentMatch.Type == model.Playoff {
-				// Just leave the lights on all match if co-op is not enabled for this match (or event).
-				arena.Plc.SetTrussLights([3]bool{true, true, true}, [3]bool{true, true, true})
-			} else {
-				// Set the lights to reflect co-op status.
-				if arena.RedScoreSummary().CoopertitionBonus && arena.BlueScoreSummary().CoopertitionBonus {
-					arena.Plc.SetTrussLights([3]bool{true, true, true}, [3]bool{true, true, true})
-				} else {
-					arena.Plc.SetTrussLights(
-						[3]bool{
-							arena.RedRealtimeScore.CurrentScore.ProcessorAlgae >= 1,
-							arena.RedRealtimeScore.CurrentScore.ProcessorAlgae >= 2,
-							false,
-						},
-						[3]bool{
-							arena.BlueRealtimeScore.CurrentScore.ProcessorAlgae >= 1,
-							arena.BlueRealtimeScore.CurrentScore.ProcessorAlgae >= 2,
-							false,
-						},
-					)
-				}
+			// Tower lights indicate level achieved.
+			redTowerLights := [3]bool{
+				redScore.TowerLevelCount(1) > 0,
+				redScore.TowerLevelCount(2) > 0,
+				redScore.TowerLevelCount(3) > 0,
 			}
+			blueTowerLights := [3]bool{
+				blueScore.TowerLevelCount(1) > 0,
+				blueScore.TowerLevelCount(2) > 0,
+				blueScore.TowerLevelCount(3) > 0,
+			}
+			arena.Plc.SetTowerLights(redTowerLights, blueTowerLights)
 		}
 	} else {
-		arena.Plc.SetTrussLights(
+		arena.Plc.SetTowerLights(
 			[3]bool{inGracePeriod, inGracePeriod, inGracePeriod}, [3]bool{inGracePeriod, inGracePeriod, inGracePeriod},
 		)
 	}
@@ -1232,15 +1225,12 @@ func (arena *Arena) runPeriodicTasks() {
 	arena.purgeDisconnectedDisplays()
 }
 
-// trussLightWarningSequence generates the sequence of truss light states during the "sonar ping" warning sound. It
-// returns true if the sequence is active, and an array of booleans indicating the state of each truss light.
-func trussLightWarningSequence(matchTimeSec float64) (bool, [3]bool) {
+// towerLightWarningSequence generates the sequence of tower light states during the "sonar ping" warning sound. It
+// returns true if the sequence is active, and an array of booleans indicating the state of each tower light.
+func towerLightWarningSequence(matchTimeSec float64) (bool, [3]bool) {
 	stepTimeSec := 0.2
 	sequence := []int{1, 2, 3, 2, 1, 2, 3, 0, 0, 1, 2, 3, 2, 1, 2, 3, 0, 0}
-	startTime := float64(
-		game.MatchTiming.WarmupDurationSec + game.MatchTiming.AutoDurationSec + game.MatchTiming.PauseDurationSec +
-			game.MatchTiming.TeleopDurationSec - game.MatchTiming.WarningRemainingDurationSec,
-	)
+	startTime := game.GetDurationToTeleopEnd().Seconds() - float64(game.MatchTiming.WarningRemainingDurationSec)
 	lights := [3]bool{false, false, false}
 
 	if matchTimeSec < startTime {

@@ -33,12 +33,12 @@ Display shown on the audience screen overlayed over the video.
               </div>
               <div class="score-fields">
                 <div class="score-field">
-                  <img class="coral-icon" src="/static/img/coral.png"/>
-                  <div id="leftCoral"></div>
+                  <img class="fuel-icon" src="/static/img/fuel.png"/>
+                  <div id="leftFuel"></div>
                 </div>
                 <div class="score-field">
-                  <img class="algae-icon" src="/static/img/algae.png"/>
-                  <div id="leftAlgae"></div>
+                  <img class="tower-icon" src="/static/img/tower.png"/>
+                  <div id="leftTower"></div>
                 </div>
               </div>
               <div class="score-number" id="leftScoreNumber"></div>
@@ -47,12 +47,12 @@ Display shown on the audience screen overlayed over the video.
               <div class="score-number" id="rightScoreNumber"></div>
               <div class="score-fields">
                 <div class="score-field">
-                  <div id="rightCoral"></div>
-                  <img class="coral-icon" src="/static/img/coral.png"/>
+                  <div id="rightFuel"></div>
+                  <img class="fuel-icon" src="/static/img/fuel.png"/>
                 </div>
                 <div class="score-field">
-                  <div id="rightAlgae"></div>
-                  <img class="algae-icon" src="/static/img/algae.png"/>
+                  <div id="rightTower"></div>
+                  <img class="tower-icon" src="/static/img/tower.png"/>
                 </div>
               </div>
               <div class="avatars">
@@ -109,16 +109,16 @@ Display shown on the audience screen overlayed over the video.
             <div class="final-breakdown final-breakdown-teams">
               <div class="final-teams reversible-left">
                 <div class="final-alliance playoff-only-field" id="leftFinalAlliance"></div>
-                {{range $i := seq 4}}
+                {{range $i, $v := seq 3}}
                 <div class="final-team-row">
-                  <img class="final-team-avatar" id="leftFinalTeam{{$i}}Avatar" src=""/>
-                  <div class="final-team-number" id="leftFinalTeam{{$i}}"></div>
+                  <img class="final-team-avatar" id="leftFinalTeam{{$v}}Avatar" src=""/>
+                  <div class="final-team-number" id="leftFinalTeam{{$v}}"></div>
                   <div class="final-team-card">
-                    <div id="leftFinalTeam{{$i}}Card"></div>
+                    <div id="leftFinalTeam{{$v}}Card"></div>
                   </div>
                   <div class="final-team-rank playoff-hidden-field">
-                    <img id="leftFinalTeam{{$i}}RankIndicator" src=""/>
-                    <div id="leftFinalTeam{{$i}}RankNumber"></div>
+                    <img id="leftFinalTeam{{$v}}RankIndicator" src=""/>
+                    <div id="leftFinalTeam{{$v}}RankNumber"></div>
                   </div>
                 </div>
                 {{end}}
@@ -128,16 +128,16 @@ Display shown on the audience screen overlayed over the video.
               </div>
             </div>
             <div class="final-breakdown" id="leftFinalBreakdown">
-              <div id="leftFinalLeavePoints"></div>
-              <div id="leftFinalCoralPoints"></div>
-              <div id="leftFinalAlgaePoints"></div>
-              <div id="leftFinalBargePoints"></div>
+              <div id="leftFinalAutoPoints"></div>
+              <div id="leftFinalFuelPoints"></div>
+              <div id="leftFinalTowerPoints"></div>
+              <div>&nbsp;</div>
               <div id="leftFinalFoulPoints"></div>
               <div class="playoff-hidden-field">
-                <div class="coopertition-hidden-field" id="leftFinalCoopertitionBonus"></div>
-                <div id="leftFinalAutoBonusRankingPoint"></div>
-                <div id="leftFinalCoralBonusRankingPoint"></div>
-                <div id="leftFinalBargeBonusRankingPoint"></div>
+                <div class="coopertition-hidden-field">&nbsp;</div>
+                <div id="leftFinalFuelEnergizedRankingPoint"></div>
+                <div id="leftFinalFuelSuperchargedRankingPoint"></div>
+                <div id="leftFinalTowerTraversalRankingPoint"></div>
                 <div id="leftFinalRankingPoints"></div>
               </div>
               <div class="playoff-only-field">
@@ -146,16 +146,16 @@ Display shown on the audience screen overlayed over the video.
               </div>
             </div>
             <div class="final-breakdown" id="centerFinalBreakdown">
-              <div>Leave</div>
-              <div>Coral</div>
-              <div>Algae</div>
-              <div>Barge</div>
+              <div>Auto</div>
+              <div>Fuel</div>
+              <div>Tower</div>
+              <div>&nbsp;</div>
               <div>Foul</div>
               <div class="playoff-hidden-field">
-                <div class="coopertition-hidden-field">Coopertition Bonus</div>
-                <div>Auto Bonus</div>
-                <div>Coral Bonus</div>
-                <div>Barge Bonus</div>
+                <div class="coopertition-hidden-field">&nbsp;</div>
+                <div>Fuel Energized</div>
+                <div>Fuel Supercharged</div>
+                <div>Tower Traversal</div>
                 <div>Ranking Points</div>
               </div>
               <div class="playoff-only-field">
@@ -164,16 +164,16 @@ Display shown on the audience screen overlayed over the video.
               </div>
             </div>
             <div class="final-breakdown" id="rightFinalBreakdown">
-              <div id="rightFinalLeavePoints"></div>
-              <div id="rightFinalCoralPoints"></div>
-              <div id="rightFinalAlgaePoints"></div>
-              <div id="rightFinalBargePoints"></div>
+              <div id="rightFinalAutoPoints"></div>
+              <div id="rightFinalFuelPoints"></div>
+              <div id="rightFinalTowerPoints"></div>
+              <div>&nbsp;</div>
               <div id="rightFinalFoulPoints"></div>
               <div class="playoff-hidden-field">
-                <div class="coopertition-hidden-field" id="rightFinalCoopertitionBonus"></div>
-                <div id="rightFinalAutoBonusRankingPoint"></div>
-                <div id="rightFinalCoralBonusRankingPoint"></div>
-                <div id="rightFinalBargeBonusRankingPoint"></div>
+                <div class="coopertition-hidden-field">&nbsp;</div>
+                <div id="rightFinalFuelEnergizedRankingPoint"></div>
+                <div id="rightFinalFuelSuperchargedRankingPoint"></div>
+                <div id="rightFinalTowerTraversalRankingPoint"></div>
                 <div id="rightFinalRankingPoints"></div>
               </div>
               <div class="playoff-only-field">
@@ -184,16 +184,16 @@ Display shown on the audience screen overlayed over the video.
             <div class="final-breakdown final-breakdown-teams">
               <div class="final-teams reversible-right">
                 <div class="final-alliance playoff-only-field" id="rightFinalAlliance"></div>
-                {{range $i := seq 4}}
+                {{range $i, $v := seq 3}}
                 <div class="final-team-row">
-                  <img class="final-team-avatar" id="rightFinalTeam{{$i}}Avatar" src=""/>
-                  <div class="final-team-number" id="rightFinalTeam{{$i}}"></div>
+                  <img class="final-team-avatar" id="rightFinalTeam{{$v}}Avatar" src=""/>
+                  <div class="final-team-number" id="rightFinalTeam{{$v}}"></div>
                   <div class="final-team-card">
-                    <div id="rightFinalTeam{{$i}}Card"></div>
+                    <div id="rightFinalTeam{{$v}}Card"></div>
                   </div>
                   <div class="final-team-rank playoff-hidden-field">
-                    <img id="rightFinalTeam{{$i}}RankIndicator" src=""/>
-                    <div id="rightFinalTeam{{$i}}RankNumber"></div>
+                    <img id="rightFinalTeam{{$v}}RankIndicator" src=""/>
+                    <div id="rightFinalTeam{{$v}}RankNumber"></div>
                   </div>
                 </div>
                 {{end}}

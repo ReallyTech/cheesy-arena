@@ -7,11 +7,12 @@ package plc
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/goburrow/modbus"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/goburrow/modbus"
 )
 
 type Plc interface {
@@ -33,8 +34,8 @@ type Plc interface {
 	GetInputNames() []string
 	GetRegisterNames() []string
 	GetCoilNames() []string
-	GetProcessorCounts() (int, int)
-	SetTrussLights(redLights, blueLights [3]bool)
+	GetFuelCounts() (int, int)
+	SetTowerLights(redLights, blueLights [3]bool)
 }
 
 type ModbusPlc struct {
@@ -95,8 +96,8 @@ type register int
 
 const (
 	fieldIoConnection register = iota
-	redProcessor
-	blueProcessor
+	redFuel
+	blueFuel
 	registerCount
 )
 
@@ -114,12 +115,12 @@ const (
 	stackLightBlue
 	stackLightBuzzer
 	fieldResetLight
-	redTrussLightOuter
-	redTrussLightMiddle
-	redTrussLightInner
-	blueTrussLightOuter
-	blueTrussLightMiddle
-	blueTrussLightInner
+	redTowerLightLower
+	redTowerLightMiddle
+	redTowerLightUpper
+	blueTowerLightLower
+	blueTowerLightMiddle
+	blueTowerLightUpper
 	coilCount
 )
 
@@ -295,20 +296,20 @@ func (plc *ModbusPlc) GetCoilNames() []string {
 	return coilNames
 }
 
-// Returns the red and blue processor counts, respectively.
-func (plc *ModbusPlc) GetProcessorCounts() (int, int) {
-	return int(plc.registers[redProcessor]), int(plc.registers[blueProcessor])
+// Returns the red and blue fuel counts, respectively.
+func (plc *ModbusPlc) GetFuelCounts() (int, int) {
+	return int(plc.registers[redFuel]), int(plc.registers[blueFuel])
 }
 
-// Sets the state of the red and blue truss lights. Each array represents the outer, middle, and inner lights,
+// Sets the state of the red and blue tower lights. Each array represents the lower, middle, and upper lights,
 // respectively.
-func (plc *ModbusPlc) SetTrussLights(redLights, blueLights [3]bool) {
-	plc.coils[redTrussLightOuter] = redLights[0]
-	plc.coils[redTrussLightMiddle] = redLights[1]
-	plc.coils[redTrussLightInner] = redLights[2]
-	plc.coils[blueTrussLightOuter] = blueLights[0]
-	plc.coils[blueTrussLightMiddle] = blueLights[1]
-	plc.coils[blueTrussLightInner] = blueLights[2]
+func (plc *ModbusPlc) SetTowerLights(redLights, blueLights [3]bool) {
+	plc.coils[redTowerLightLower] = redLights[0]
+	plc.coils[redTowerLightMiddle] = redLights[1]
+	plc.coils[redTowerLightUpper] = redLights[2]
+	plc.coils[blueTowerLightLower] = blueLights[0]
+	plc.coils[blueTowerLightMiddle] = blueLights[1]
+	plc.coils[blueTowerLightUpper] = blueLights[2]
 }
 
 func (plc *ModbusPlc) connect() error {

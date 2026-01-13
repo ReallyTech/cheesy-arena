@@ -4,13 +4,14 @@
 package websocket
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWebsocket(t *testing.T) {
@@ -95,7 +96,7 @@ func TestWebsocket(t *testing.T) {
 	// Ensure the read times out if there is nothing to read.
 	_, _, err = ws.ReadWithTimeout(time.Millisecond)
 	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "timed out")
+		assert.Contains(t, err.Error(), "timeout")
 	}
 
 	// Test that closing the connection eliminates the listeners once another message is sent.

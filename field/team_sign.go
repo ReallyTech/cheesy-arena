@@ -7,14 +7,15 @@ package field
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/game"
-	"github.com/Team254/cheesy-arena/model"
 	"image/color"
 	"log"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/model"
 )
 
 // Represents a collection of team number and timer signs.
@@ -95,6 +96,8 @@ func (signs *TeamSigns) Update(arena *Arena) {
 		countdownSec = game.MatchTiming.AutoDurationSec
 	case AutoPeriod:
 		countdownSec = game.MatchTiming.WarmupDurationSec + game.MatchTiming.AutoDurationSec - matchTimeSec
+	case PausePeriod:
+		fallthrough
 	case TeleopPeriod:
 		countdownSec = game.MatchTiming.WarmupDurationSec + game.MatchTiming.AutoDurationSec +
 			game.MatchTiming.TeleopDurationSec + game.MatchTiming.PauseDurationSec - matchTimeSec
@@ -144,7 +147,7 @@ func (sign *TeamSign) SetId(id int) {
 	ipAddress := fmt.Sprintf("%s%d", teamSignAddressPrefix, id)
 
 	var err error
-	sign.udpConn, err = net.Dial("udp4", fmt.Sprintf("%s:%d", ipAddress, teamSignPort))
+	sign.udpConn, err = net.Dial("udp4", net.JoinHostPort(ipAddress, strconv.Itoa(teamSignPort)))
 	if err != nil {
 		log.Printf("Failed to connect to team sign at %s: %v", ipAddress, err)
 		return
@@ -197,35 +200,40 @@ func generateInMatchTeamRearText(arena *Arena, isRed bool, countdown string) str
 		opponentRealtimeScore = arena.RedRealtimeScore
 		formatString = "B%03d-R%03d"
 	}
-	scoreSummary := realtimeScore.CurrentScore.Summarize(&opponentRealtimeScore.CurrentScore)
-	scoreTotal := scoreSummary.Score - scoreSummary.BargePoints
-	opponentScoreSummary := opponentRealtimeScore.CurrentScore.Summarize(&realtimeScore.CurrentScore)
-	opponentScoreTotal := opponentScoreSummary.Score - opponentScoreSummary.BargePoints
+	matchId := 0
+	if arena.CurrentMatch != nil {
+		matchId = arena.CurrentMatch.Id
+	}
+	scoreSummary := realtimeScore.CurrentScore.Summarize(&opponentRealtimeScore.CurrentScore, isRed, matchId)
+	scoreTotal := scoreSummary.Score - scoreSummary.TowerPoints
+	opponentScoreSummary := opponentRealtimeScore.CurrentScore.Summarize(&realtimeScore.CurrentScore, !isRed, matchId)
+	opponentScoreTotal := opponentScoreSummary.Score - opponentScoreSummary.TowerPoints
 	allianceScores := fmt.Sprintf(formatString, scoreTotal, opponentScoreTotal)
 
-	var coralRankingPointProgress string
+	var fuelRPProgress string
 	if arena.CurrentMatch.Type != model.Playoff {
-		coralRankingPointProgress = fmt.Sprintf("%d/%d", scoreSummary.NumCoralLevels, scoreSummary.NumCoralLevelsGoal)
+		fuelRPProgress = fmt.Sprintf("F:%d/%d", realtimeScore.CurrentScore.FuelTotal(), game.FuelEnergizedThreshold)
 	}
 
-	return fmt.Sprintf("%s %s %s", countdown, allianceScores, coralRankingPointProgress)
+	return fmt.Sprintf("%s %s %s", countdown, allianceScores, fuelRPProgress)
 }
 
 // Returns the in-match rear text for the timer display for the given alliance.
 func generateInMatchTimerRearText(arena *Arena, isRed bool) string {
-	var reef *game.Reef
+	var score *game.Score
 	if isRed {
-		reef = &arena.RedRealtimeScore.CurrentScore.Reef
+		score = &arena.RedRealtimeScore.CurrentScore
 	} else {
-		reef = &arena.BlueRealtimeScore.CurrentScore.Reef
+		score = &arena.BlueRealtimeScore.CurrentScore
 	}
 
 	return fmt.Sprintf(
-		"1-%02d 2-%02d 3-%02d 4-%02d",
-		reef.CountTotalCoralByLevel(game.Level1),
-		reef.CountTotalCoralByLevel(game.Level2),
-		reef.CountTotalCoralByLevel(game.Level3),
-		reef.CountTotalCoralByLevel(game.Level4),
+		"F-A:%02d S1:%02d S2:%02d S3:%02d S4:%02d",
+		score.FuelAuto,
+		score.FuelShift1,
+		score.FuelShift2,
+		score.FuelShift3,
+		score.FuelShift4,
 	)
 }
 

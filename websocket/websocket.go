@@ -7,7 +7,6 @@ package websocket
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const pingInterval = time.Second * 10
@@ -70,23 +71,9 @@ func (ws *Websocket) Read() (string, any, error) {
 }
 
 func (ws *Websocket) ReadWithTimeout(timeout time.Duration) (string, any, error) {
-	type wsReadResult struct {
-		messageType string
-		message     any
-		err         error
-	}
-	readChan := make(chan wsReadResult, 1)
-	go func() {
-		messageType, message, err := ws.Read()
-		readChan <- wsReadResult{messageType, message, err}
-	}()
-
-	select {
-	case result := <-readChan:
-		return result.messageType, result.message, result.err
-	case <-time.After(timeout):
-		return "", nil, fmt.Errorf("Websocket read timed out after waiting for %v", timeout)
-	}
+	ws.conn.SetReadDeadline(time.Now().Add(timeout))
+	defer ws.conn.SetReadDeadline(time.Time{})
+	return ws.Read()
 }
 
 func (ws *Websocket) Write(messageType string, data any) error {
@@ -121,6 +108,7 @@ func (ws *Websocket) HandleNotifiers(notifiers ...*Notifier) {
 
 		// Send each notifier's respective data immediately upon connection to bootstrap the client state.
 		if notifier.messageProducer != nil {
+			log.Printf("DEBUG: Sending initial value for notifier %s", notifier.messageType)
 			err := ws.WriteNotifier(notifier)
 			if err != nil {
 				log.Printf("Websocket error writing inital value for notifier %v: %v", notifier, err)

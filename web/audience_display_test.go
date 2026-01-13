@@ -4,10 +4,12 @@
 package web
 
 import (
+	"testing"
+
+	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/websocket"
 	gorillawebsocket "github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAudienceDisplay(t *testing.T) {
@@ -29,6 +31,8 @@ func TestAudienceDisplay(t *testing.T) {
 
 func TestAudienceDisplayWebsocket(t *testing.T) {
 	web := setupTestWeb(t)
+	game.MatchTiming.WarmupDurationSec = 0
+	game.UpdateMatchSounds()
 
 	server, wsUrl := web.startTestServer()
 	defer server.Close()

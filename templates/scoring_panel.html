@@ -21,7 +21,7 @@ UI for entering realtime scores.
         <h5 class="text-white mb-2">Tower Level 1 (Auto)</h5>
         <div class="d-flex justify-content-evenly gap-3" style="height: 100px;">
           {{range $i, $v := seq 3}}
-          {{template "teamButton" (dict "id" (printf "tower-auto-%d" $v) "index" $v "class" "team-button" "onclick" (printf "cycleTowerAuto(%d);" $v))}}
+          {{template "teamButton" (dict "id" (printf "tower-auto-%d" $v) "index" $v "class" "team-button tower-auto-btn")}}
           {{end}}
         </div>
       </div>
@@ -29,7 +29,7 @@ UI for entering realtime scores.
         <h5 class="text-white mb-2">Tower Level 2/3 (Teleop)</h5>
         <div class="d-flex justify-content-evenly gap-3" style="height: 100px;">
           {{range $i, $v := seq 3}}
-          {{template "teamButton" (dict "id" (printf "tower-teleop-%d" $v) "index" $v "class" "team-button" "onclick" (printf "cycleTowerTeleop(%d);" $v))}}
+          {{template "teamButton" (dict "id" (printf "tower-teleop-%d" $v) "index" $v "class" "team-button tower-teleop-btn")}}
           {{end}}
         </div>
       </div>
@@ -54,8 +54,8 @@ UI for entering realtime scores.
     </div>
 
     <div id="bottom-controls" class="p-3 gap-3">
-      <button id="commit" onclick="commitMatchScore();" ontouchstart disabled>Commit</button>
-      <button id="fouls-button" onclick="showFoulsDialog();" ontouchstart disabled>Fouls</button>
+      <button id="commit" class="scoring-btn" ontouchstart disabled>Commit</button>
+      <button id="fouls-button" class="scoring-btn" ontouchstart disabled>Fouls</button>
     </div>
   </main>
 
@@ -63,16 +63,16 @@ UI for entering realtime scores.
     <div class="dialog-container">
       <div class="dialog-banner">Fouls</div>
       <div id="foul-container">
-        <button class="foul-button red" onclick="addFoul('red', 'foul');" ontouchstart>
+        <button class="foul-button red" data-alliance="red" data-type="foul" ontouchstart>
           <div class="foul-button-label">Red Foul</div>
         </button>
-        <button class="foul-button red" onclick="addFoul('red', 'tech');" ontouchstart>
+        <button class="foul-button red" data-alliance="red" data-type="tech" ontouchstart>
           <div class="foul-button-label">Red Tech Foul</div>
         </button>
-        <button class="foul-button blue" onclick="addFoul('blue', 'foul');" ontouchstart>
+        <button class="foul-button blue" data-alliance="blue" data-type="foul" ontouchstart>
           <div class="foul-button-label">Blue Foul</div>
         </button>
-        <button class="foul-button blue" onclick="addFoul('blue', 'tech');" ontouchstart>
+        <button class="foul-button blue" data-alliance="blue" data-type="tech" ontouchstart>
           <div class="foul-button-label">Blue Tech Foul</div>
         </button>
       </div>
@@ -83,20 +83,20 @@ UI for entering realtime scores.
 {{end}}
 
 {{define "teamButton"}}
-<button id="{{.id}}" class="{{.class}}" onclick="{{.onclick}}" ontouchstart disabled>
+<button id="{{.id}}" class="{{.class}}" data-index="{{.index}}" ontouchstart disabled>
   <div class="team-num">Team {{.index}}</div>
   <div class="team-text" id="{{.id}}-status">None</div>
 </button>
 {{end}}
 
 {{define "counter"}}
-<div class="counter">
-  <button onclick="decrementCounter('{{.id}}');" ontouchstart disabled>-</button>
+<div class="counter" data-id="{{.id}}">
+  <button class="minus" ontouchstart disabled>-</button>
   <div class="counter-status">
     <div class="counter-label">{{.label}}</div>
     <div class="counter-main-value" id="value-{{.id}}">0</div>
   </div>
-  <button onclick="incrementCounter('{{.id}}');" ontouchstart disabled>+</button>
+  <button class="plus" ontouchstart disabled>+</button>
 </div>
 {{end}}
 

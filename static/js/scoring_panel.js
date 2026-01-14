@@ -194,7 +194,30 @@ $(function () {
   const pathParts = window.location.pathname.split("/");
   alliance = pathParts[pathParts.length - 1]; // "red" or "blue"
   $(".container").attr("data-alliance", alliance);
-  
+
+  // Attach event listeners
+  $(document).on("click", ".tower-auto-btn", function() {
+    cycleTowerAuto(parseInt($(this).data("index")));
+  });
+  $(document).on("click", ".tower-teleop-btn", function() {
+    cycleTowerTeleop(parseInt($(this).data("index")));
+  });
+  $(document).on("click", ".counter .plus", function() {
+    incrementCounter($(this).closest(".counter").data("id"));
+  });
+  $(document).on("click", ".counter .minus", function() {
+    decrementCounter($(this).closest(".counter").data("id"));
+  });
+  $(document).on("click", "#commit", function() {
+    commitMatchScore();
+  });
+  $(document).on("click", "#fouls-button", function() {
+    showFoulsDialog();
+  });
+  $(document).on("click", ".foul-button", function() {
+    addFoul($(this).data("alliance"), $(this).data("type"));
+  });
+
   // Set up the websocket back to the server.
   websocket = new CheesyWebsocket("/panels/scoring/" + alliance + "/websocket", {
     matchLoad: function (event) { handleMatchLoad(event.data); },

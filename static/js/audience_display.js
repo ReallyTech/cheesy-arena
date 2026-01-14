@@ -172,7 +172,7 @@ const handleScorePosted = function (data) {
   $(`#${redSide}FinalFuelEnergizedRankingPoint`).text(data.RedScoreSummary.FuelEnergizedRankingPoint ? "✓" : "");
   $(`#${redSide}FinalFuelSuperchargedRankingPoint`).text(data.RedScoreSummary.FuelSuperchargedRankingPoint ? "✓" : "");
   $(`#${redSide}FinalTowerTraversalRankingPoint`).text(data.RedScoreSummary.TowerTraversalRankingPoint ? "✓" : "");
-  $(`#${redSide}FinalRankingPoints`).text(data.RedScoreSummary.RankingPoints);
+  $(`#${redSide}FinalRankingPoints`).text(data.RedRankingPoints);
   $(`#${redSide}FinalWins`).text(data.RedPlayoffWins);
   const redFinalDestination = $(`#${redSide}FinalDestination`);
   redFinalDestination.html(data.RedDestination.replace("Advances to ", "Advances to<br>"));

@@ -55,6 +55,7 @@ type Arena struct {
 	Database         *model.Database
 	EventSettings    *model.EventSettings
 	accessPoint      network.AccessPoint
+	wrtAccessPoint   *network.WrtAccessPoint
 	networkSwitch    network.TeamEthernetSwitch
 	redSCC           *network.SCCSwitch
 	blueSCC          *network.SCCSwitch
@@ -188,6 +189,11 @@ func (arena *Arena) LoadSettings() error {
 		settings.NetworkSecurityEnabled,
 		accessPointWifiStatuses,
 	)
+	if settings.WrtApEnabled {
+		arena.wrtAccessPoint = network.NewWrtAccessPoint(settings.WrtApAddress, settings.WrtApRpcUrl, settings.WrtApPassword)
+	} else {
+		arena.wrtAccessPoint = nil
+	}
 	if settings.SwitchType == "wrtswitch" {
 		arena.networkSwitch = network.NewWrtSwitch(settings.SwitchAddress, settings.SwitchRpcUrl, settings.SwitchPassword)
 	} else {
@@ -975,6 +981,11 @@ func (arena *Arena) setupNetwork(teams [6]*model.Team, isPreload bool) {
 	if arena.EventSettings.NetworkSecurityEnabled {
 		if err := arena.accessPoint.ConfigureTeamWifi(teams); err != nil {
 			log.Printf("Failed to configure team WiFi: %s", err.Error())
+		}
+		if arena.wrtAccessPoint != nil {
+			if err := arena.wrtAccessPoint.ConfigureTeamWifi(teams, arena.EventSettings.ApChannel); err != nil {
+				log.Printf("Failed to configure WRT team WiFi: %s", err.Error())
+			}
 		}
 		go func() {
 			arena.setSCCEthernetEnabled(false)

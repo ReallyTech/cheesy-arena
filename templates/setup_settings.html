@@ -280,6 +280,30 @@ UI for configuring event settings.
                 </div>
               </div>
               <div class="row mb-3">
+                <label class="col-lg-8 control-label" for="wrtApEnabled">Enable secondary OpenWrt AP</label>
+                <div class="col-lg-1 checkbox">
+                  <input type="checkbox" id="wrtApEnabled" name="wrtApEnabled" {{if .WrtApEnabled}} checked{{end}}>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label class="col-lg-6 control-label">WrtAP Address</label>
+                <div class="col-lg-6">
+                  <input type="text" class="form-control" name="wrtApAddress" value="{{.WrtApAddress}}" placeholder="10.0.100.4">
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label class="col-lg-6 control-label">WrtAP RPC Password</label>
+                <div class="col-lg-6">
+                  <input type="password" class="form-control" name="wrtApPassword" value="{{.WrtApPassword}}">
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label class="col-lg-6 control-label">WrtAP RPC URL</label>
+                <div class="col-lg-6">
+                  <input type="text" class="form-control" name="wrtApRpcUrl" value="{{.WrtApRpcUrl}}" placeholder="/cgi-bin/luci/rpc">
+                </div>
+              </div>
+              <div class="row mb-3">
                 <label class="col-lg-6 control-label">Switch Type</label>
                 <div class="col-lg-6">
                   <select class="form-select" name="switchType" onchange="toggleSwitchRpcUrl(this.value);">

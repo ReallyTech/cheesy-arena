@@ -56,6 +56,10 @@ type EventSettings struct {
 	ApAddress                        string
 	ApPassword                       string
 	ApChannel                        int
+	WrtApEnabled                     bool
+	WrtApAddress                     string
+	WrtApPassword                    string
+	WrtApRpcUrl                      string
 	SwitchType                       string
 	SwitchAddress                    string
 	SwitchPassword                   string
@@ -137,6 +141,7 @@ func (database *Database) GetEventSettings() (*EventSettings, error) {
 		SelectionShowUnpickedTeams:  true,
 		TbaDownloadEnabled:          true,
 		ApChannel:                   36,
+		WrtApRpcUrl:                 "/cgi-bin/luci/rpc",
 		SwitchRpcUrl:                "/cgi-bin/luci/rpc",
 		SCCUpCommands:               strings.Join(sccDefaultUpCommands, "\n"),
 		SCCDownCommands:             strings.Join(sccDefaultDownCommands, "\n"),

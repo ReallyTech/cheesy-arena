@@ -85,6 +85,12 @@ const handleArenaStatus = function (data) {
     teamRadioIconElement.attr("class", `bi-reception-${wifiStatus.ConnectionQuality}`);
 
     $("#accessPointStatus").attr("data-status", data.AccessPointStatus);
+    if (data.WrtAccessPointStatus !== "OFF") {
+      $("#wrtAccessPointStatus").show();
+      $("#wrtAccessPointStatus").attr("data-status", data.WrtAccessPointStatus);
+    } else {
+      $("#wrtAccessPointStatus").hide();
+    }
     $("#switchStatus").attr("data-status", data.SwitchStatus);
 
     if (stationStatus.DsConn) {

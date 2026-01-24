@@ -84,6 +84,10 @@ func (web *Web) settingsPostHandler(w http.ResponseWriter, r *http.Request) {
 	eventSettings.ApAddress = r.PostFormValue("apAddress")
 	eventSettings.ApPassword = r.PostFormValue("apPassword")
 	eventSettings.ApChannel, _ = strconv.Atoi(r.PostFormValue("apChannel"))
+	eventSettings.WrtApEnabled = r.PostFormValue("wrtApEnabled") == "on"
+	eventSettings.WrtApAddress = r.PostFormValue("wrtApAddress")
+	eventSettings.WrtApPassword = r.PostFormValue("wrtApPassword")
+	eventSettings.WrtApRpcUrl = r.PostFormValue("wrtApRpcUrl")
 	eventSettings.SwitchType = r.PostFormValue("switchType")
 	eventSettings.SwitchAddress = r.PostFormValue("switchAddress")
 	eventSettings.SwitchPassword = r.PostFormValue("switchPassword")

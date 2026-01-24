@@ -96,6 +96,7 @@ func (arena *Arena) generateArenaStatusMessage() any {
 		MatchState
 		CanStartMatch         bool
 		AccessPointStatus     string
+		WrtAccessPointStatus  string
 		SwitchStatus          string
 		RedSCCStatus          string
 		BlueSCCStatus         string
@@ -108,6 +109,7 @@ func (arena *Arena) generateArenaStatusMessage() any {
 		arena.MatchState,
 		arena.checkCanStartMatch() == nil,
 		arena.accessPoint.Status,
+		arena.getWrtAccessPointStatus(),
 		arena.networkSwitch.GetStatus(),
 		arena.redSCC.Status,
 		arena.blueSCC.Status,
@@ -383,4 +385,11 @@ func getRulesViolated(redFouls, blueFouls []game.Foul) map[int]*game.Rule {
 		rules[foul.RuleId] = game.GetRuleById(foul.RuleId)
 	}
 	return rules
+}
+
+func (arena *Arena) getWrtAccessPointStatus() string {
+	if arena.wrtAccessPoint == nil {
+		return "OFF"
+	}
+	return arena.wrtAccessPoint.Status
 }

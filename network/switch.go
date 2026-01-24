@@ -9,10 +9,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/Team254/cheesy-arena/model"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/Team254/cheesy-arena/model"
 )
 
 const (
@@ -31,6 +32,11 @@ const (
 	blue3Vlan = 60
 )
 
+type TeamEthernetSwitch interface {
+	ConfigureTeamEthernet(teams [6]*model.Team) error
+	GetStatus() string
+}
+
 type Switch struct {
 	address               string
 	port                  int
@@ -39,6 +45,10 @@ type Switch struct {
 	configBackoffDuration time.Duration
 	configPauseDuration   time.Duration
 	Status                string
+}
+
+func (sw *Switch) GetStatus() string {
+	return sw.Status
 }
 
 var ServerIpAddress = "10.0.100.5" // The DS will try to connect to this address only.

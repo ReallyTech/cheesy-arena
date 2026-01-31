@@ -46,6 +46,7 @@ func (ap *WrtAccessPoint) Authenticate() error {
 	}
 	res, err := ap.sendRequest(ap.baseURL+"/auth", reqBody)
 	if err != nil {
+		ap.Token = ""
 		return err
 	}
 
@@ -53,7 +54,8 @@ func (ap *WrtAccessPoint) Authenticate() error {
 		ap.Token = token
 		return nil
 	}
-	return fmt.Errorf("authentication failed")
+	ap.Token = ""
+	return fmt.Errorf("authentication failed: result is not a string")
 }
 
 func (ap *WrtAccessPoint) ConfigureTeamWifi(teams [6]*model.Team, channel int) error {
@@ -70,9 +72,9 @@ func (ap *WrtAccessPoint) ConfigureTeamWifi(teams [6]*model.Team, channel int) e
 
 	var cmdBuffer bytes.Buffer
 	// Set channel
-	cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.radio0.channel='%d'; ", channel))
+	cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.radio1.channel='%d'; ", channel))
 
-	stations := []string{"red1", "red2", "red3", "blue1", "blue2", "blue3"}
+	stations := []string{"wifinet1", "wifinet2", "wifinet3", "wifinet4", "wifinet5", "wifinet6"}
 	vlans := []int{10, 20, 30, 40, 50, 60}
 
 	for i, team := range teams {
@@ -83,6 +85,8 @@ func (ap *WrtAccessPoint) ConfigureTeamWifi(teams [6]*model.Team, channel int) e
 			continue
 		}
 
+		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s='wifi-iface'; ", station))
+		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.device='radio1'; ", station))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.disabled='0'; ", station))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.network='vlan%d'; ", station, vlan))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.mode='ap'; ", station))
@@ -95,12 +99,15 @@ func (ap *WrtAccessPoint) ConfigureTeamWifi(teams [6]*model.Team, channel int) e
 
 	err := ap.runSysCommand(cmdBuffer.String())
 	if err != nil {
-		// Retry once with authentication
-		ap.Authenticate()
+		// Retry once with authentication in case the token expired
+		if authErr := ap.Authenticate(); authErr != nil {
+			ap.Status = "ERROR"
+			return fmt.Errorf("initial command failed (%v), and re-authentication failed (%v)", err, authErr)
+		}
 		err = ap.runSysCommand(cmdBuffer.String())
 		if err != nil {
 			ap.Status = "ERROR"
-			return err
+			return fmt.Errorf("command failed after re-authentication: %v", err)
 		}
 	}
 

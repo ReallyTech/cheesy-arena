@@ -983,9 +983,11 @@ func (arena *Arena) setupNetwork(teams [6]*model.Team, isPreload bool) {
 			log.Printf("Failed to configure team WiFi: %s", err.Error())
 		}
 		if arena.wrtAccessPoint != nil {
-			if err := arena.wrtAccessPoint.ConfigureTeamWifi(teams, arena.EventSettings.ApChannel); err != nil {
-				log.Printf("Failed to configure WRT team WiFi: %s", err.Error())
-			}
+			go func(teams [6]*model.Team) {
+				if err := arena.wrtAccessPoint.ConfigureTeamWifi(teams, arena.EventSettings.WrtApChannel); err != nil {
+					log.Printf("Failed to configure WRT team WiFi: %s", err.Error())
+				}
+			}(teams)
 		}
 		go func() {
 			arena.setSCCEthernetEnabled(false)

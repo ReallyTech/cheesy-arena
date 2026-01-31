@@ -304,6 +304,22 @@ UI for configuring event settings.
                 </div>
               </div>
               <div class="row mb-3">
+                <label class="col-lg-6 control-label">WrtAP Channel</label>
+                <div class="col-lg-6">
+                  <select class="form-select" name="wrtApChannel">
+                    <option value="36" {{if eq .WrtApChannel 36}}selected{{end}}>36 (5.180 GHz)</option>
+                    <option value="40" {{if eq .WrtApChannel 40}}selected{{end}}>40 (5.200 GHz)</option>
+                    <option value="44" {{if eq .WrtApChannel 44}}selected{{end}}>44 (5.220 GHz)</option>
+                    <option value="48" {{if eq .WrtApChannel 48}}selected{{end}}>48 (5.240 GHz)</option>
+                    <option value="149" {{if eq .WrtApChannel 149}}selected{{end}}>149 (5.745 GHz)</option>
+                    <option value="153" {{if eq .WrtApChannel 153}}selected{{end}}>153 (5.765 GHz)</option>
+                    <option value="157" {{if eq .WrtApChannel 157}}selected{{end}}>157 (5.785 GHz)</option>
+                    <option value="161" {{if eq .WrtApChannel 161}}selected{{end}}>161 (5.805 GHz)</option>
+                    <option value="165" {{if eq .WrtApChannel 165}}selected{{end}}>165 (5.825 GHz)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mb-3">
                 <label class="col-lg-6 control-label">Switch Type</label>
                 <div class="col-lg-6">
                   <select class="form-select" name="switchType" onchange="toggleSwitchRpcUrl(this.value);">

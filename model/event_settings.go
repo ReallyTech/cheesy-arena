@@ -60,6 +60,7 @@ type EventSettings struct {
 	WrtApAddress                     string
 	WrtApPassword                    string
 	WrtApRpcUrl                      string
+	WrtApChannel                     int
 	SwitchType                       string
 	SwitchAddress                    string
 	SwitchPassword                   string
@@ -142,6 +143,7 @@ func (database *Database) GetEventSettings() (*EventSettings, error) {
 		TbaDownloadEnabled:          true,
 		ApChannel:                   36,
 		WrtApRpcUrl:                 "/cgi-bin/luci/rpc",
+		WrtApChannel:                36,
 		SwitchRpcUrl:                "/cgi-bin/luci/rpc",
 		SCCUpCommands:               strings.Join(sccDefaultUpCommands, "\n"),
 		SCCDownCommands:             strings.Join(sccDefaultDownCommands, "\n"),

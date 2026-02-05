@@ -19,20 +19,20 @@ func TestTeamSign_GenerateInMatchRearText(t *testing.T) {
 	arena.RedRealtimeScore.CurrentScore = *game.TestScore1()
 	arena.BlueRealtimeScore.CurrentScore = *game.TestScore2()
 
-	assert.Equal(t, "01:23 R110-B085 F:170/100", generateInMatchTeamRearText(arena, true, "01:23"))
-	assert.Equal(t, "01:23 B085-R110 F:105/100", generateInMatchTeamRearText(arena, false, "01:23"))
-	assert.Equal(t, "F-A:20 S1:30 S2:30 S3:30 S4:30", generateInMatchTimerRearText(arena, true))
-	assert.Equal(t, "F-A:10 S1:20 S2:20 S3:20 S4:20", generateInMatchTimerRearText(arena, false))
+	assert.Equal(t, "01:23 R170-B125 F:170/100", generateInMatchTeamRearText(arena, true, "01:23"))
+	assert.Equal(t, "01:23 B125-R170 F:105/100", generateInMatchTeamRearText(arena, false, "01:23"))
+	assert.Equal(t, "FUEL AUTO:20 TELE:150", generateInMatchTimerRearText(arena, true))
+	assert.Equal(t, "FUEL AUTO:10 TELE:95", generateInMatchTimerRearText(arena, false))
 	arena.BlueRealtimeScore.CurrentScore.FuelAuto = 25
-	assert.Equal(t, "00:59 R110-B100 F:170/100", generateInMatchTeamRearText(arena, true, "00:59"))
-	assert.Equal(t, "00:59 B100-R110 F:120/100", generateInMatchTeamRearText(arena, false, "00:59"))
-	assert.Equal(t, "F-A:20 S1:30 S2:30 S3:30 S4:30", generateInMatchTimerRearText(arena, true))
-	assert.Equal(t, "F-A:25 S1:20 S2:20 S3:20 S4:20", generateInMatchTimerRearText(arena, false))
+	assert.Equal(t, "00:59 R170-B140 F:170/100", generateInMatchTeamRearText(arena, true, "00:59"))
+	assert.Equal(t, "00:59 B140-R170 F:120/100", generateInMatchTeamRearText(arena, false, "00:59"))
+	assert.Equal(t, "FUEL AUTO:20 TELE:150", generateInMatchTimerRearText(arena, true))
+	assert.Equal(t, "FUEL AUTO:25 TELE:95", generateInMatchTimerRearText(arena, false))
 
 	// Check that RP progress is hidden for playoff matches.
 	arena.CurrentMatch.Type = model.Playoff
-	assert.Equal(t, "00:45 R110-B100 ", generateInMatchTeamRearText(arena, true, "00:45"))
-	assert.Equal(t, "00:45 B100-R110 ", generateInMatchTeamRearText(arena, false, "00:45"))
+	assert.Equal(t, "00:45 R170-B140 ", generateInMatchTeamRearText(arena, true, "00:45"))
+	assert.Equal(t, "00:45 B140-R170 ", generateInMatchTeamRearText(arena, false, "00:45"))
 }
 
 func TestTeamSign_Timer(t *testing.T) {

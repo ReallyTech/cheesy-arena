@@ -8,12 +8,7 @@ package game
 type Score struct {
 	RobotsBypassed [3]bool
 	FuelAuto       int
-	FuelTransition int
-	FuelShift1     int
-	FuelShift2     int
-	FuelShift3     int
-	FuelShift4     int
-	FuelEndGame    int
+	FuelTeleop     int
 	TowerLevels    [3]int
 	TowerIsAuto    [3]bool
 	Fouls          []Foul
@@ -34,46 +29,9 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 		return summary
 	}
 
-	// HUB Activation Logic
-	// Always Active: Auto, Transition Shift, End Game
-	// Shifts 1-4: Alternating based on Auto Winner
-
-	selfAutoFuel := score.FuelAuto
-	oppAutoFuel := opponentScore.FuelAuto
-
-	selfActiveShift1 := true
-	if selfAutoFuel > oppAutoFuel {
-		selfActiveShift1 = false // Auto winner is inactive in Shift 1
-	} else if oppAutoFuel > selfAutoFuel {
-		selfActiveShift1 = true // Auto loser is active in Shift 1
-	} else {
-		// Tied: Randomly select one. We use MatchId and IsRed for a deterministic "random" choice.
-		if (matchId%2 == 0) == isRed {
-			selfActiveShift1 = false
-		} else {
-			selfActiveShift1 = true
-		}
-	}
-
-	selfActiveShift2 := !selfActiveShift1
-	selfActiveShift3 := selfActiveShift1
-	selfActiveShift4 := !selfActiveShift1
-
 	// Calculate Fuel points
-	summary.FuelPoints = score.FuelAuto + score.FuelTransition + score.FuelEndGame
-	summary.TotalFuel = score.FuelAuto + score.FuelTransition + score.FuelShift1 + score.FuelShift2 + score.FuelShift3 + score.FuelShift4 + score.FuelEndGame
-	if selfActiveShift1 {
-		summary.FuelPoints += score.FuelShift1
-	}
-	if selfActiveShift2 {
-		summary.FuelPoints += score.FuelShift2
-	}
-	if selfActiveShift3 {
-		summary.FuelPoints += score.FuelShift3
-	}
-	if selfActiveShift4 {
-		summary.FuelPoints += score.FuelShift4
-	}
+	summary.FuelPoints = score.FuelAuto + score.FuelTeleop
+	summary.TotalFuel = score.FuelAuto + score.FuelTeleop
 
 	// Calculate Tower points
 	autoLevel1Count := 0
@@ -133,7 +91,7 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 }
 
 func (score *Score) FuelTotal() int {
-	return score.FuelAuto + score.FuelTransition + score.FuelShift1 + score.FuelShift2 + score.FuelShift3 + score.FuelShift4 + score.FuelEndGame
+	return score.FuelAuto + score.FuelTeleop
 }
 
 func (score *Score) TowerLevelCount(level int) int {
@@ -150,12 +108,7 @@ func (score *Score) TowerLevelCount(level int) int {
 func (score *Score) Equals(other *Score) bool {
 	if score.RobotsBypassed != other.RobotsBypassed ||
 		score.FuelAuto != other.FuelAuto ||
-		score.FuelTransition != other.FuelTransition ||
-		score.FuelShift1 != other.FuelShift1 ||
-		score.FuelShift2 != other.FuelShift2 ||
-		score.FuelShift3 != other.FuelShift3 ||
-		score.FuelShift4 != other.FuelShift4 ||
-		score.FuelEndGame != other.FuelEndGame ||
+		score.FuelTeleop != other.FuelTeleop ||
 		score.TowerLevels != other.TowerLevels ||
 		score.TowerIsAuto != other.TowerIsAuto ||
 		score.PlayoffDq != other.PlayoffDq ||

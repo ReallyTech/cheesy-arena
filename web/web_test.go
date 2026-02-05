@@ -66,11 +66,17 @@ func readWebsocketError(t *testing.T, ws *websocket.Websocket) string {
 
 // Receives the next websocket message and asserts that it is of the given type.
 func readWebsocketType(t *testing.T, ws *websocket.Websocket, expectedMessageType string) any {
-	messageType, message, err := ws.ReadWithTimeout(time.Second * 5)
-	if assert.Nil(t, err) {
+	for {
+		messageType, message, err := ws.ReadWithTimeout(time.Second * 5)
+		if !assert.Nil(t, err) {
+			return nil
+		}
+		if messageType == "ping" {
+			continue
+		}
 		assert.Equal(t, expectedMessageType, messageType)
+		return message
 	}
-	return message
 }
 
 func readWebsocketMultiple(t *testing.T, ws *websocket.Websocket, count int) map[string]any {

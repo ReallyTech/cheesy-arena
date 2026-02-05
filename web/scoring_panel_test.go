@@ -69,6 +69,13 @@ func TestScoringPanelWebsocket(t *testing.T) {
 	readWebsocketType(t, blueWs, "realtimeScore")
 	assert.Equal(t, 2, web.arena.RedRealtimeScore.CurrentScore.FuelAuto)
 
+	// Send some teleop scoring commands.
+	fuelData.Shift = "teleop"
+	redWs.Write("fuel", fuelData)
+	readWebsocketType(t, redWs, "realtimeScore")
+	readWebsocketType(t, blueWs, "realtimeScore")
+	assert.Equal(t, 1, web.arena.RedRealtimeScore.CurrentScore.FuelTeleop)
+
 	towerData := struct {
 		TeamPosition int
 		Level        int

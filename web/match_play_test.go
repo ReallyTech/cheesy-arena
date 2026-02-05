@@ -127,10 +127,10 @@ func TestCommitTiebreak(t *testing.T) {
 	matchResult := &model.MatchResult{
 		MatchId: match.Id,
 		RedScore: &game.Score{
-			FuelEndGame: 1,
+			FuelTeleop: 1,
 		},
 		BlueScore: &game.Score{
-			FuelEndGame: 1,
+			FuelTeleop: 1,
 		},
 	}
 
@@ -156,10 +156,10 @@ func TestCommitTiebreak(t *testing.T) {
 
 	// Change the score to still be equal nominally but trigger the tiebreaker criteria.
 	// Red gets 1 Auto Fuel (1pt).
-	// Blue gets 1 Transition Fuel (1pt).
+	// Blue gets 1 Teleop Fuel (1pt).
 	// Red wins on Auto Fuel Points tiebreaker.
 	matchResult.RedScore = &game.Score{FuelAuto: 1}
-	matchResult.BlueScore = &game.Score{FuelTransition: 1}
+	matchResult.BlueScore = &game.Score{FuelTeleop: 1}
 
 	// Sanity check that the test scores are equal; they will need to be updated accordingly for each new game.
 	assert.Equal(

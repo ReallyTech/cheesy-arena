@@ -149,18 +149,8 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			switch args.Shift {
 			case "auto":
 				score.FuelAuto = max(0, score.FuelAuto+args.Adjustment)
-			case "transition":
-				score.FuelTransition = max(0, score.FuelTransition+args.Adjustment)
-			case "shift1":
-				score.FuelShift1 = max(0, score.FuelShift1+args.Adjustment)
-			case "shift2":
-				score.FuelShift2 = max(0, score.FuelShift2+args.Adjustment)
-			case "shift3":
-				score.FuelShift3 = max(0, score.FuelShift3+args.Adjustment)
-			case "shift4":
-				score.FuelShift4 = max(0, score.FuelShift4+args.Adjustment)
-			case "endgame":
-				score.FuelEndGame = max(0, score.FuelEndGame+args.Adjustment)
+			case "teleop":
+				score.FuelTeleop = max(0, score.FuelTeleop+args.Adjustment)
 			}
 			scoreChanged = true
 		} else if command == "tower" {

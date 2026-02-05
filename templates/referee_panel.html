@@ -27,8 +27,8 @@ UI for entering and tracking fouls and red/yellow cards.
   </div>
   <div id="fouls">
     <div id="scoreSummary" class="headRef-dependent">
-      {{template "scoreSummary" dict "id" "blueScoreSummary"}}
-      {{template "scoreSummary" dict "id" "redScoreSummary"}}
+      {{template "scoreSummary" (dict "id" "blueScoreSummary")}}
+      {{template "scoreSummary" (dict "id" "redScoreSummary")}}
     </div>
     <h3>Fouls</h3>
     <div id="foulButtons">
@@ -67,30 +67,14 @@ UI for entering and tracking fouls and red/yellow cards.
   <div class="team-2">0</div>
   <div class="team-3">0</div>
 
-  <div class="label">Leave</div>
-  <div class="leave-symbol team-1-leave">❌</div>
-  <div class="leave-symbol team-2-leave">❌</div>
-  <div class="leave-symbol team-3-leave">❌</div>
-
-  <div class="label">Endgame</div>
-  <div class="team-1-endgame">None</div>
-  <div class="team-2-endgame">None</div>
-  <div class="team-3-endgame">None</div>
-
-  <div class="label">Coral</div>
+  <div class="label">Fuel</div>
   <div class="wide-row">
-    <span class="coral-l1">0</span> / <span class="coral-l2">0</span> / <span class="coral-l3">0</span> /
-    <span class="coral-l4">0</span>
-    <br />
-    <span style="color: yellow">
-      <span class="coral-l1-auto">0</span> / <span class="coral-l2-auto">0</span> / <span class="coral-l3-auto">0</span> /
-      <span class="coral-l4-auto">0</span>
-    </span>
+    Auto: <span class="fuel-auto">0</span> / Teleop: <span class="fuel-teleop">0</span> / Total: <span class="fuel-total">0</span>
   </div>
 
-  <div class="label">Algae</div>
-  <div class="wide-row">
-    <span class="processor">0</span> / <span class="barge">0</span>
-  </div>
+  <div class="label">Tower</div>
+  <div class="team-1-tower">None</div>
+  <div class="team-2-tower">None</div>
+  <div class="team-3-tower">None</div>
 </div>
 {{end}}

@@ -14,51 +14,28 @@ func TestScoreSummary(t *testing.T) {
 	blueScore := TestScore2()
 
 	redSummary := redScore.Summarize(blueScore, true, 1)
-	assert.Equal(t, 110, redSummary.FuelPoints)
+	assert.Equal(t, 170, redSummary.FuelPoints)
 	assert.Equal(t, 35, redSummary.TowerPoints)
 	assert.Equal(t, 35, redSummary.AutoPoints) // FuelAuto (20) + TowerAuto (15)
-	assert.Equal(t, 145, redSummary.MatchPoints)
+	assert.Equal(t, 205, redSummary.MatchPoints)
 	assert.Equal(t, 0, redSummary.FoulPoints)
-	assert.Equal(t, 145, redSummary.Score)
+	assert.Equal(t, 205, redSummary.Score)
 	assert.Equal(t, true, redSummary.FuelEnergizedRankingPoint)
 	assert.Equal(t, false, redSummary.FuelSuperchargedRankingPoint)
 	assert.Equal(t, true, redSummary.TowerTraversalRankingPoint)
 	assert.Equal(t, 2, redSummary.BonusRankingPoints)
 
 	blueSummary := blueScore.Summarize(redScore, false, 1)
-	assert.Equal(t, 65, blueSummary.FuelPoints)
+	assert.Equal(t, 105, blueSummary.FuelPoints)
 	assert.Equal(t, 60, blueSummary.TowerPoints)
 	assert.Equal(t, 40, blueSummary.AutoPoints) // FuelAuto (10) + TowerAuto (30)
-	assert.Equal(t, 125, blueSummary.MatchPoints)
+	assert.Equal(t, 165, blueSummary.MatchPoints)
 	assert.Equal(t, 20, blueSummary.FoulPoints) // 5 (Minor) + 15 (Major)
-	assert.Equal(t, 145, blueSummary.Score)
+	assert.Equal(t, 185, blueSummary.Score)
 	assert.Equal(t, true, blueSummary.FuelEnergizedRankingPoint)
 	assert.Equal(t, false, blueSummary.FuelSuperchargedRankingPoint)
 	assert.Equal(t, true, blueSummary.TowerTraversalRankingPoint)
 	assert.Equal(t, 2, blueSummary.BonusRankingPoints)
-}
-
-func TestHubActivationTieBreak(t *testing.T) {
-	redScore := &Score{FuelAuto: 10, FuelShift1: 10}
-	blueScore := &Score{FuelAuto: 10, FuelShift1: 10}
-
-	// Case 1: MatchId % 2 == 0
-	// For Red: (0 % 2 == 0) == true -> selfActiveShift1 = false
-	redSummary := redScore.Summarize(blueScore, true, 0)
-	assert.Equal(t, 10, redSummary.FuelPoints) // FuelAuto(10) + FuelShift1(0)
-
-	// For Blue: (0 % 2 == 0) == false -> selfActiveShift1 = true
-	blueSummary := blueScore.Summarize(redScore, false, 0)
-	assert.Equal(t, 20, blueSummary.FuelPoints) // FuelAuto(10) + FuelShift1(10)
-
-	// Case 2: MatchId % 2 != 0
-	// For Red: (1 % 2 == 0) == true -> false. Result: selfActiveShift1 = true.
-	redSummary = redScore.Summarize(blueScore, true, 1)
-	assert.Equal(t, 20, redSummary.FuelPoints)
-
-	// For Blue: (1 % 2 == 0) == false -> true. Result: selfActiveShift1 = false.
-	blueSummary = blueScore.Summarize(redScore, false, 1)
-	assert.Equal(t, 10, blueSummary.FuelPoints)
 }
 
 func TestScorePlayoffDq(t *testing.T) {

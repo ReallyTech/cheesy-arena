@@ -39,12 +39,7 @@ UI for entering realtime scores.
       {{if not .PlcIsEnabled}}
       <div class="d-flex flex-wrap justify-content-center gap-3 p-3">
         {{template "counter" (dict "id" "fuel-auto" "label" "Auto")}}
-        {{template "counter" (dict "id" "fuel-transition" "label" "Transition")}}
-        {{template "counter" (dict "id" "fuel-shift1" "label" "Shift 1")}}
-        {{template "counter" (dict "id" "fuel-shift2" "label" "Shift 2")}}
-        {{template "counter" (dict "id" "fuel-shift3" "label" "Shift 3")}}
-        {{template "counter" (dict "id" "fuel-shift4" "label" "Shift 4")}}
-        {{template "counter" (dict "id" "fuel-endgame" "label" "End Game")}}
+        {{template "counter" (dict "id" "fuel-teleop" "label" "Teleop")}}
       </div>
       {{else}}
       <div class="text-center p-5 text-white">
@@ -104,3 +99,4 @@ UI for entering realtime scores.
 <script src="/static/js/match_timing.js"></script>
 <script src="/static/js/scoring_panel.js"></script>
 {{end}}
+

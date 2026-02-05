@@ -65,7 +65,7 @@ const handleMatchLoad = function (data) {
 
 const addFoul = function (alliance, type) {
   const isMajor = type === "tech";
-  websocket.send("addFoul", {Alliance: alliance, IsMajor: isMajor});
+  websocket.send("addFoul", { Alliance: alliance, IsMajor: isMajor });
 }
 
 // Handles a websocket message to update the match status.
@@ -140,12 +140,7 @@ const handleRealtimeScore = function (data) {
   }
 
   $(`#value-fuel-auto`).text(score.FuelAuto);
-  $(`#value-fuel-transition`).text(score.FuelTransition);
-  $(`#value-fuel-shift1`).text(score.FuelShift1);
-  $(`#value-fuel-shift2`).text(score.FuelShift2);
-  $(`#value-fuel-shift3`).text(score.FuelShift3);
-  $(`#value-fuel-shift4`).text(score.FuelShift4);
-  $(`#value-fuel-endgame`).text(score.FuelEndGame);
+  $(`#value-fuel-teleop`).text(score.FuelTeleop);
 };
 
 const cycleTowerAuto = function (index) {
@@ -175,12 +170,12 @@ const cycleTowerTeleop = function (index) {
 
 const incrementCounter = function (id) {
   let shift = id.replace("fuel-", "");
-  websocket.send("fuel", {Shift: shift, Adjustment: 1});
+  websocket.send("fuel", { Shift: shift, Adjustment: 1 });
 }
 
 const decrementCounter = function (id) {
   let shift = id.replace("fuel-", "");
-  websocket.send("fuel", {Shift: shift, Adjustment: -1});
+  websocket.send("fuel", { Shift: shift, Adjustment: -1 });
 }
 
 // Sends a websocket message to indicate that the score for this alliance is ready.
@@ -196,25 +191,25 @@ $(function () {
   $(".container").attr("data-alliance", alliance);
 
   // Attach event listeners
-  $(document).on("click", ".tower-auto-btn", function() {
+  $(document).on("click", ".tower-auto-btn", function () {
     cycleTowerAuto(parseInt($(this).data("index")));
   });
-  $(document).on("click", ".tower-teleop-btn", function() {
+  $(document).on("click", ".tower-teleop-btn", function () {
     cycleTowerTeleop(parseInt($(this).data("index")));
   });
-  $(document).on("click", ".counter .plus", function() {
+  $(document).on("click", ".counter .plus", function () {
     incrementCounter($(this).closest(".counter").data("id"));
   });
-  $(document).on("click", ".counter .minus", function() {
+  $(document).on("click", ".counter .minus", function () {
     decrementCounter($(this).closest(".counter").data("id"));
   });
-  $(document).on("click", "#commit", function() {
+  $(document).on("click", "#commit", function () {
     commitMatchScore();
   });
-  $(document).on("click", "#fouls-button", function() {
+  $(document).on("click", "#fouls-button", function () {
     showFoulsDialog();
   });
-  $(document).on("click", ".foul-button", function() {
+  $(document).on("click", ".foul-button", function () {
     addFoul($(this).data("alliance"), $(this).data("type"));
   });
 

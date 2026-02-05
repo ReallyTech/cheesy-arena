@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -204,7 +205,7 @@ func (web *Web) restoreDbHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the file to a temporary location on disk and verify that it can be opened as a database.
-	tempFile, err := ioutil.TempFile(".", "uploaded-db-")
+	tempFile, err := ioutil.TempFile(filepath.Dir(web.arena.Database.Path), "uploaded-db-")
 	if err != nil {
 		handleWebErr(w, err)
 		return

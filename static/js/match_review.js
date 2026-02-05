@@ -32,12 +32,7 @@ const renderResults = function (alliance) {
 
   // Set the values of the form fields from the JSON results data.
   getInputElement(alliance, "FuelAuto").val(result.score.FuelAuto);
-  getInputElement(alliance, "FuelTransition").val(result.score.FuelTransition);
-  getInputElement(alliance, "FuelShift1").val(result.score.FuelShift1);
-  getInputElement(alliance, "FuelShift2").val(result.score.FuelShift2);
-  getInputElement(alliance, "FuelShift3").val(result.score.FuelShift3);
-  getInputElement(alliance, "FuelShift4").val(result.score.FuelShift4);
-  getInputElement(alliance, "FuelEndGame").val(result.score.FuelEndGame);
+  getInputElement(alliance, "FuelTeleop").val(result.score.FuelTeleop);
 
   for (let i = 0; i < 3; i++) {
     getInputElement(alliance, `RobotsBypassed${i}`).prop("checked", result.score.RobotsBypassed[i]);
@@ -75,12 +70,7 @@ const updateResults = function (alliance) {
 
   result.score.RobotsBypassed = [];
   result.score.FuelAuto = parseInt(formData[`${alliance}FuelAuto`]);
-  result.score.FuelTransition = parseInt(formData[`${alliance}FuelTransition`]);
-  result.score.FuelShift1 = parseInt(formData[`${alliance}FuelShift1`]);
-  result.score.FuelShift2 = parseInt(formData[`${alliance}FuelShift2`]);
-  result.score.FuelShift3 = parseInt(formData[`${alliance}FuelShift3`]);
-  result.score.FuelShift4 = parseInt(formData[`${alliance}FuelShift4`]);
-  result.score.FuelEndGame = parseInt(formData[`${alliance}FuelEndGame`]);
+  result.score.FuelTeleop = parseInt(formData[`${alliance}FuelTeleop`]);
 
   result.score.TowerLevels = [];
   result.score.TowerIsAuto = [];
@@ -119,7 +109,7 @@ const updateResults = function (alliance) {
 const addFoul = function (alliance) {
   updateResults(alliance);
   const result = allianceResults[alliance];
-  result.score.Fouls.push({IsMajor: false, TeamId: 0, Rule: 0});
+  result.score.Fouls.push({ IsMajor: false, TeamId: 0, Rule: 0 });
   renderResults(alliance);
 };
 

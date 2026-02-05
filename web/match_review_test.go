@@ -57,8 +57,8 @@ func TestMatchReviewEditExistingResult(t *testing.T) {
 	recorder := web.getHttpResponse("/match_review")
 	assert.Equal(t, 200, recorder.Code)
 	assert.Contains(t, recorder.Body.String(), ">QF4-3<")
-	assert.Contains(t, recorder.Body.String(), ">145<") // The red score
-	assert.Contains(t, recorder.Body.String(), ">145<") // The blue score
+	assert.Contains(t, recorder.Body.String(), ">205<") // The red score
+	assert.Contains(t, recorder.Body.String(), ">185<") // The blue score
 
 	// Check response for non-existent match.
 	recorder = web.getHttpResponse(fmt.Sprintf("/match_review/%d/edit", 12345))
@@ -154,7 +154,7 @@ func TestMatchReviewEditCurrentMatch(t *testing.T) {
 
 	postBody := fmt.Sprintf(
 		"matchResultJson={\"MatchId\":%d,\"RedScore\":{\"TowerLevels\":[0,2,1]},\"BlueScore\":{"+
-			"\"FuelEndGame\":21,\"Fouls\":[{\"TeamId\":973,\"RuleId\":1}]},"+
+			"\"FuelTeleop\":21,\"Fouls\":[{\"TeamId\":973,\"RuleId\":1}]},"+
 			"\"RedCards\":{\"105\":\"yellow\"},\"BlueCards\":{}}",
 		match.Id,
 	)
@@ -170,7 +170,7 @@ func TestMatchReviewEditCurrentMatch(t *testing.T) {
 		[3]int{0, 2, 1},
 		web.arena.RedRealtimeScore.CurrentScore.TowerLevels,
 	)
-	assert.Equal(t, 21, web.arena.BlueRealtimeScore.CurrentScore.FuelEndGame)
+	assert.Equal(t, 21, web.arena.BlueRealtimeScore.CurrentScore.FuelTeleop)
 	assert.Equal(t, 0, len(web.arena.RedRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.BlueRealtimeScore.CurrentScore.Fouls))
 	assert.Equal(t, 1, len(web.arena.RedRealtimeScore.Cards))

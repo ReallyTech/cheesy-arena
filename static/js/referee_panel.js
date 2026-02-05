@@ -9,27 +9,27 @@ let blueFoulsHashCode = 0;
 
 // Sends the foul to the server to add it to the list.
 const addFoul = function (alliance, isMajor) {
-  websocket.send("addFoul", {Alliance: alliance, IsMajor: isMajor});
+  websocket.send("addFoul", { Alliance: alliance, IsMajor: isMajor });
 }
 
 // Toggles the foul type between minor and major.
 const toggleFoulType = function (alliance, index) {
-  websocket.send("toggleFoulType", {Alliance: alliance, Index: index});
+  websocket.send("toggleFoulType", { Alliance: alliance, Index: index });
 }
 
 // Updates the team that the foul is attributed to.
 const updateFoulTeam = function (alliance, index, teamId) {
-  websocket.send("updateFoulTeam", {Alliance: alliance, Index: index, TeamId: teamId});
+  websocket.send("updateFoulTeam", { Alliance: alliance, Index: index, TeamId: teamId });
 }
 
 // Updates the rule that the foul is for.
 const updateFoulRule = function (alliance, index, ruleId) {
-  websocket.send("updateFoulRule", {Alliance: alliance, Index: index, RuleId: ruleId});
+  websocket.send("updateFoulRule", { Alliance: alliance, Index: index, RuleId: ruleId });
 }
 
 // Removes the foul with the given parameters from the list.
 var deleteFoul = function (alliance, index) {
-  websocket.send("deleteFoul", {Alliance: alliance, Index: index});
+  websocket.send("deleteFoul", { Alliance: alliance, Index: index });
 };
 
 // Cycles through no card, yellow card, and red card.
@@ -42,7 +42,7 @@ var cycleCard = function (cardButton) {
   }
   websocket.send(
     "card",
-    {Alliance: $(cardButton).attr("data-alliance"), TeamId: parseInt($(cardButton).attr("data-team")), Card: newCard}
+    { Alliance: $(cardButton).attr("data-alliance"), TeamId: parseInt($(cardButton).attr("data-team")), Card: newCard }
   );
   $(cardButton).attr("data-card", newCard);
 };
@@ -76,9 +76,11 @@ var handleMatchLoad = function (data) {
   $("#redScoreSummary .team-1").text(data.Teams["R1"].Id);
   $("#redScoreSummary .team-2").text(data.Teams["R2"].Id);
   $("#redScoreSummary .team-3").text(data.Teams["R3"].Id);
+  $("#redScoreSummary .placeholder").text("Red").css("visibility", "visible");
   $("#blueScoreSummary .team-1").text(data.Teams["B1"].Id);
   $("#blueScoreSummary .team-2").text(data.Teams["B2"].Id);
   $("#blueScoreSummary .team-3").text(data.Teams["B3"].Id);
+  $("#blueScoreSummary .placeholder").text("Blue").css("visibility", "visible");
 };
 
 // Handles a websocket message to update the match status.
@@ -86,11 +88,11 @@ const handleMatchTime = function (data) {
   $(".control-button").attr("data-enabled", matchStates[data.MatchState] === "POST_MATCH");
 };
 
-const endgameStatusNames = [
+const towerLevelNames = [
   "None",
-  "Park",
-  "Shallow",
-  "Deep",
+  "Level 1",
+  "Level 2",
+  "Level 3",
 ];
 
 // Handles a websocket message to update the realtime scoring fields.
@@ -117,32 +119,13 @@ const handleRealtimeScore = function (data) {
       score = data.Blue.Score;
     }
 
-    let l1_total = score.Reef.TroughNear + score.Reef.TroughFar;
-    let l2_total = score.Reef.Branches[0].filter(Boolean).length;
-    let l3_total = score.Reef.Branches[1].filter(Boolean).length;
-    let l4_total = score.Reef.Branches[2].filter(Boolean).length;
-    let l1_auto_total = score.Reef.AutoTroughNear + score.Reef.AutoTroughFar;
-    let l2_auto_total = score.Reef.AutoBranches[0].filter(Boolean).length;
-    let l3_auto_total = score.Reef.AutoBranches[1].filter(Boolean).length;
-    let l4_auto_total = score.Reef.AutoBranches[2].filter(Boolean).length;
-
     let scoreRoot = `${alliance}ScoreSummary`;
-    $(`#${scoreRoot} .team-1-leave`).text(score.LeaveStatuses[0] ? "✓" : "❌");
-    $(`#${scoreRoot} .team-2-leave`).text(score.LeaveStatuses[1] ? "✓" : "❌");
-    $(`#${scoreRoot} .team-3-leave`).text(score.LeaveStatuses[2] ? "✓" : "❌");
-    $(`#${scoreRoot} .team-1-endgame`).text(endgameStatusNames[score.EndgameStatuses[0]]);
-    $(`#${scoreRoot} .team-2-endgame`).text(endgameStatusNames[score.EndgameStatuses[1]]);
-    $(`#${scoreRoot} .team-3-endgame`).text(endgameStatusNames[score.EndgameStatuses[2]]);
-    $(`#${scoreRoot} .coral-l1`).text(l1_total);
-    $(`#${scoreRoot} .coral-l2`).text(l2_total);
-    $(`#${scoreRoot} .coral-l3`).text(l3_total);
-    $(`#${scoreRoot} .coral-l4`).text(l4_total);
-    $(`#${scoreRoot} .coral-l1-auto`).text(l1_auto_total);
-    $(`#${scoreRoot} .coral-l2-auto`).text(l2_auto_total);
-    $(`#${scoreRoot} .coral-l3-auto`).text(l3_auto_total);
-    $(`#${scoreRoot} .coral-l4-auto`).text(l4_auto_total);
-    $(`#${scoreRoot} .processor`).text(score.ProcessorAlgae);
-    $(`#${scoreRoot} .barge`).text(score.BargeAlgae);
+    $(`#${scoreRoot} .fuel-auto`).text(score.FuelAuto);
+    $(`#${scoreRoot} .fuel-teleop`).text(score.FuelTeleop);
+    $(`#${scoreRoot} .fuel-total`).text(score.FuelAuto + score.FuelTeleop);
+    $(`#${scoreRoot} .team-1-tower`).text(towerLevelNames[score.TowerLevels[0]]);
+    $(`#${scoreRoot} .team-2-tower`).text(towerLevelNames[score.TowerLevels[1]]);
+    $(`#${scoreRoot} .team-3-tower`).text(towerLevelNames[score.TowerLevels[2]]);
   }
 }
 

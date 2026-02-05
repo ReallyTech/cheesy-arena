@@ -55,12 +55,7 @@ type TbaAlliance struct {
 
 type TbaScoreBreakdown struct {
 	FuelAuto       int  `mapstructure:"fuelAuto"`
-	FuelTransition int  `mapstructure:"fuelTransition"`
-	FuelShift1     int  `mapstructure:"fuelShift1"`
-	FuelShift2     int  `mapstructure:"fuelShift2"`
-	FuelShift3     int  `mapstructure:"fuelShift3"`
-	FuelShift4     int  `mapstructure:"fuelShift4"`
-	FuelEndGame    int  `mapstructure:"fuelEndGame"`
+	FuelTeleop     int  `mapstructure:"fuelTeleop"`
 	FuelPoints     int  `mapstructure:"fuelPoints"`
 	TowerPoints    int  `mapstructure:"towerPoints"`
 	AutoPoints     int  `mapstructure:"autoPoints"`
@@ -617,12 +612,7 @@ func createTbaScoringBreakdown(
 	}
 
 	breakdown.FuelAuto = score.FuelAuto
-	breakdown.FuelTransition = score.FuelTransition
-	breakdown.FuelShift1 = score.FuelShift1
-	breakdown.FuelShift2 = score.FuelShift2
-	breakdown.FuelShift3 = score.FuelShift3
-	breakdown.FuelShift4 = score.FuelShift4
-	breakdown.FuelEndGame = score.FuelEndGame
+	breakdown.FuelTeleop = score.FuelTeleop
 	breakdown.FuelPoints = scoreSummary.FuelPoints
 	breakdown.TowerPoints = scoreSummary.TowerPoints
 	breakdown.AutoPoints = scoreSummary.AutoPoints

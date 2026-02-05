@@ -228,12 +228,9 @@ func generateInMatchTimerRearText(arena *Arena, isRed bool) string {
 	}
 
 	return fmt.Sprintf(
-		"F-A:%02d S1:%02d S2:%02d S3:%02d S4:%02d",
+		"FUEL AUTO:%02d TELE:%02d",
 		score.FuelAuto,
-		score.FuelShift1,
-		score.FuelShift2,
-		score.FuelShift3,
-		score.FuelShift4,
+		score.FuelTeleop,
 	)
 }
 

@@ -8,6 +8,7 @@ package field
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -76,6 +77,9 @@ type Arena struct {
 	LastMatchTimeSec                  float64
 	RedRealtimeScore                  *RealtimeScore
 	BlueRealtimeScore                 *RealtimeScore
+	lastRedFuelCount                  int
+	lastBlueFuelCount                 int
+	hubTieBreakerRedStarts            bool
 	lastDsPacketTime                  time.Time
 	lastPeriodicTaskTime              time.Time
 	EventStatus                       EventStatus
@@ -635,6 +639,42 @@ func (arena *Arena) MatchTimeSec() float64 {
 	}
 }
 
+func (arena *Arena) isHubActive(alliance string, matchTime float64) bool {
+	// AUTO: Both active.
+	if matchTime < game.GetDurationToAutoEnd().Seconds() {
+		return true
+	}
+
+	// Endgame: Both active.
+	if matchTime >= game.GetDurationToTeleopEnd().Seconds()-30 {
+		return true
+	}
+
+	// Swapping period: Teleop Start (usually Auto end) to 0:30 remaining.
+	if matchTime >= game.GetDurationToAutoEnd().Seconds() && matchTime < game.GetDurationToTeleopEnd().Seconds()-30 {
+		period := int((matchTime - game.GetDurationToAutoEnd().Seconds()) / 25)
+
+		redAutoFuel := arena.RedRealtimeScore.CurrentScore.FuelAuto
+		blueAutoFuel := arena.BlueRealtimeScore.CurrentScore.FuelAuto
+
+		var redStarts bool
+		if redAutoFuel < blueAutoFuel {
+			redStarts = true
+		} else if blueAutoFuel < redAutoFuel {
+			redStarts = false
+		} else {
+			redStarts = arena.hubTieBreakerRedStarts
+		}
+
+		if alliance == "red" {
+			return (period%2 == 0) == redStarts
+		} else {
+			return (period%2 == 0) != redStarts
+		}
+	}
+	return false
+}
+
 // Performs a single iteration of checking inputs and timers and setting outputs accordingly to control the
 // flow of a match.
 func (arena *Arena) Update() {
@@ -667,6 +707,9 @@ func (arena *Arena) Update() {
 			sendDsPacket = true
 		}
 		arena.Plc.ResetMatch()
+		arena.lastRedFuelCount = 0
+		arena.lastBlueFuelCount = 0
+		arena.hubTieBreakerRedStarts = rand.Intn(2) == 0
 		arena.FieldVolunteers = false
 		arena.FieldReset = false
 	case WarmupPeriod:
@@ -1078,35 +1121,13 @@ func (arena *Arena) getAssignedAllianceStation(teamId int) string {
 
 // Updates the score given new input information from the field PLC, and actuates PLC outputs accordingly.
 func (arena *Arena) handlePlcInputOutput() {
-	if !arena.Plc.IsEnabled() {
-		return
-	}
-
-	// Handle PLC functions that are always active.
-	if arena.Plc.GetFieldEStop() && !arena.matchAborted {
-		arena.AbortMatch()
-	}
-	redEStops, blueEStops := arena.Plc.GetTeamEStops()
-	redAStops, blueAStops := arena.Plc.GetTeamAStops()
-	arena.handleTeamStop("R1", redEStops[0], redAStops[0])
-	arena.handleTeamStop("R2", redEStops[1], redAStops[1])
-	arena.handleTeamStop("R3", redEStops[2], redAStops[2])
-	arena.handleTeamStop("B1", blueEStops[0], blueAStops[0])
-	arena.handleTeamStop("B2", blueEStops[1], blueAStops[1])
-	arena.handleTeamStop("B3", blueEStops[2], blueAStops[2])
-	redEthernets, blueEthernets := arena.Plc.GetEthernetConnected()
-	arena.AllianceStations["R1"].Ethernet = redEthernets[0]
-	arena.AllianceStations["R2"].Ethernet = redEthernets[1]
-	arena.AllianceStations["R3"].Ethernet = redEthernets[2]
-	arena.AllianceStations["B1"].Ethernet = blueEthernets[0]
-	arena.AllianceStations["B2"].Ethernet = blueEthernets[1]
-	arena.AllianceStations["B3"].Ethernet = blueEthernets[2]
-
 	// Handle in-match PLC functions.
 	redScore := &arena.RedRealtimeScore.CurrentScore
 	oldRedScore := *redScore
+	oldRedHubActive := arena.RedRealtimeScore.HubActive
 	blueScore := &arena.BlueRealtimeScore.CurrentScore
 	oldBlueScore := *blueScore
+	oldBlueHubActive := arena.BlueRealtimeScore.HubActive
 	matchStartTime := arena.MatchStartTime
 	currentTime := time.Now()
 	teleopGracePeriod := matchStartTime.Add(game.GetDurationToTeleopEnd() + game.TeleopGracePeriodSec*time.Second)
@@ -1115,76 +1136,128 @@ func (arena *Arena) handlePlcInputOutput() {
 	redAllianceReady := arena.checkAllianceStationsReady("R1", "R2", "R3") == nil
 	blueAllianceReady := arena.checkAllianceStationsReady("B1", "B2", "B3") == nil
 
-	// Handle the evergreen PLC functions: stack lights, stack buzzer, and field reset light.
-	switch arena.MatchState {
-	case PreMatch:
-		if arena.lastMatchState != PreMatch {
-			arena.Plc.SetFieldResetLight(true)
+	if arena.Plc.IsEnabled() {
+		// Handle PLC functions that are always active.
+		if arena.Plc.GetFieldEStop() && !arena.matchAborted {
+			arena.AbortMatch()
 		}
-		fallthrough
-	case TimeoutActive:
-		fallthrough
-	case PostTimeout:
-		// Set the stack light state -- solid alliance color(s) if robots are not connected, solid orange if scores are
-		// not input, or blinking green if ready.
-		greenStackLight := redAllianceReady && blueAllianceReady && arena.Plc.GetCycleState(2, 0, 2)
-		arena.Plc.SetStackLights(!redAllianceReady, !blueAllianceReady, false, greenStackLight)
-		arena.Plc.SetStackBuzzer(redAllianceReady && blueAllianceReady)
+		redEStops, blueEStops := arena.Plc.GetTeamEStops()
+		redAStops, blueAStops := arena.Plc.GetTeamAStops()
+		arena.handleTeamStop("R1", redEStops[0], redAStops[0])
+		arena.handleTeamStop("R2", redEStops[1], redAStops[1])
+		arena.handleTeamStop("R3", redEStops[2], redAStops[2])
+		arena.handleTeamStop("B1", blueEStops[0], blueAStops[0])
+		arena.handleTeamStop("B2", blueEStops[1], blueAStops[1])
+		arena.handleTeamStop("B3", blueEStops[2], blueAStops[2])
+		redEthernets, blueEthernets := arena.Plc.GetEthernetConnected()
+		arena.AllianceStations["R1"].Ethernet = redEthernets[0]
+		arena.AllianceStations["R2"].Ethernet = redEthernets[1]
+		arena.AllianceStations["R3"].Ethernet = redEthernets[2]
+		arena.AllianceStations["B1"].Ethernet = blueEthernets[0]
+		arena.AllianceStations["B2"].Ethernet = blueEthernets[1]
+		arena.AllianceStations["B3"].Ethernet = blueEthernets[2]
 
-		// Turn off lights if all teams become ready.
-		if redAllianceReady && blueAllianceReady {
-			arena.FieldVolunteers = false
-			arena.FieldReset = false
-			arena.Plc.SetFieldResetLight(false)
-			if arena.CurrentMatch.FieldReadyAt.IsZero() {
-				arena.CurrentMatch.FieldReadyAt = time.Now()
+		// Handle the evergreen PLC functions: stack lights, stack buzzer, and field reset light.
+		switch arena.MatchState {
+		case PreMatch:
+			if arena.lastMatchState != PreMatch {
+				arena.Plc.SetFieldResetLight(true)
+			}
+			fallthrough
+		case TimeoutActive:
+			fallthrough
+		case PostTimeout:
+			// Set the stack light state -- solid alliance color(s) if robots are not connected, solid orange if scores are
+			// not input, or blinking green if ready.
+			greenStackLight := redAllianceReady && blueAllianceReady && arena.Plc.GetCycleState(2, 0, 2)
+			arena.Plc.SetStackLights(!redAllianceReady, !blueAllianceReady, false, greenStackLight)
+			arena.Plc.SetStackBuzzer(redAllianceReady && blueAllianceReady)
+
+			// Turn off lights if all teams become ready.
+			if redAllianceReady && blueAllianceReady {
+				arena.FieldVolunteers = false
+				arena.FieldReset = false
+				arena.Plc.SetFieldResetLight(false)
+				if arena.CurrentMatch.FieldReadyAt.IsZero() {
+					arena.CurrentMatch.FieldReadyAt = time.Now()
+				}
+			}
+		case PostMatch:
+			if arena.FieldReset {
+				arena.Plc.SetFieldResetLight(true)
+			}
+			scoreReady := arena.RedRealtimeScore.FoulsCommitted && arena.BlueRealtimeScore.FoulsCommitted &&
+				arena.positionPostMatchScoreReady("red_near") && arena.positionPostMatchScoreReady("red_far") &&
+				arena.positionPostMatchScoreReady("blue_near") && arena.positionPostMatchScoreReady("blue_far")
+			arena.Plc.SetStackLights(false, false, !scoreReady, false)
+		case AutoPeriod, PausePeriod, TeleopPeriod:
+			arena.Plc.SetStackBuzzer(false)
+			arena.Plc.SetStackLights(!redAllianceReady, !blueAllianceReady, false, true)
+		}
+
+		// Always track PLC counts regardless of match state to avoid "jumps" when the match starts.
+		redFuelCount, blueFuelCount := arena.Plc.GetFuelCounts()
+		redDelta := redFuelCount - arena.lastRedFuelCount
+		blueDelta := blueFuelCount - arena.lastBlueFuelCount
+		arena.lastRedFuelCount = redFuelCount
+		arena.lastBlueFuelCount = blueFuelCount
+
+		// Update the score based on PLC deltas, but only if the match is running and the hub is active.
+		if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod ||
+			inGracePeriod {
+			if arena.MatchState == AutoPeriod {
+				if arena.RedRealtimeScore.HubActive {
+					redScore.FuelAuto += redDelta
+				}
+				if arena.BlueRealtimeScore.HubActive {
+					blueScore.FuelAuto += blueDelta
+				}
+			} else if arena.MatchState == TeleopPeriod || inGracePeriod {
+				if arena.RedRealtimeScore.HubActive {
+					redScore.FuelTeleop += redDelta
+				}
+				if arena.BlueRealtimeScore.HubActive {
+					blueScore.FuelTeleop += blueDelta
+				}
 			}
 		}
-	case PostMatch:
-		if arena.FieldReset {
-			arena.Plc.SetFieldResetLight(true)
-		}
-		scoreReady := arena.RedRealtimeScore.FoulsCommitted && arena.BlueRealtimeScore.FoulsCommitted &&
-			arena.positionPostMatchScoreReady("red_near") && arena.positionPostMatchScoreReady("red_far") &&
-			arena.positionPostMatchScoreReady("blue_near") && arena.positionPostMatchScoreReady("blue_far")
-		arena.Plc.SetStackLights(false, false, !scoreReady, false)
-	case AutoPeriod, PausePeriod, TeleopPeriod:
-		arena.Plc.SetStackBuzzer(false)
-		arena.Plc.SetStackLights(!redAllianceReady, !blueAllianceReady, false, true)
 	}
 
-	// Get all the game-specific inputs and update the score.
-	if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod ||
-		inGracePeriod {
-		redScore.FuelAuto, blueScore.FuelAuto = arena.Plc.GetFuelCounts()
-	}
-	if !oldRedScore.Equals(redScore) || !oldBlueScore.Equals(blueScore) {
+	matchTime := arena.MatchTimeSec()
+	arena.RedRealtimeScore.HubActive = inGracePeriod || arena.isHubActive("red", matchTime)
+	arena.BlueRealtimeScore.HubActive = inGracePeriod || arena.isHubActive("blue", matchTime)
+
+	if !oldRedScore.Equals(redScore) || !oldBlueScore.Equals(blueScore) ||
+		oldRedHubActive != arena.RedRealtimeScore.HubActive ||
+		oldBlueHubActive != arena.BlueRealtimeScore.HubActive {
 		arena.RealtimeScoreNotifier.Notify()
 	}
 
-	// Handle the tower lights.
-	if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod {
-		warningSequenceActive, lights := towerLightWarningSequence(arena.MatchTimeSec())
-		if warningSequenceActive {
-			arena.Plc.SetTowerLights(lights, lights)
+	if arena.Plc.IsEnabled() {
+		// Handle the tower lights.
+		if arena.MatchState == AutoPeriod || arena.MatchState == PausePeriod || arena.MatchState == TeleopPeriod {
+			warningSequenceActive, lights := towerLightWarningSequence(arena.MatchTimeSec())
+			if warningSequenceActive {
+				arena.Plc.SetTowerLights(lights, lights)
+			} else {
+				// Tower lights indicate level achieved.
+				redTowerLights := [3]bool{
+					redScore.TowerLevelCount(1) > 0,
+					redScore.TowerLevelCount(2) > 0,
+					redScore.TowerLevelCount(3) > 0,
+				}
+				blueTowerLights := [3]bool{
+					blueScore.TowerLevelCount(1) > 0,
+					blueScore.TowerLevelCount(2) > 0,
+					blueScore.TowerLevelCount(3) > 0,
+				}
+				arena.Plc.SetTowerLights(redTowerLights, blueTowerLights)
+			}
 		} else {
-			// Tower lights indicate level achieved.
-			redTowerLights := [3]bool{
-				redScore.TowerLevelCount(1) > 0,
-				redScore.TowerLevelCount(2) > 0,
-				redScore.TowerLevelCount(3) > 0,
-			}
-			blueTowerLights := [3]bool{
-				blueScore.TowerLevelCount(1) > 0,
-				blueScore.TowerLevelCount(2) > 0,
-				blueScore.TowerLevelCount(3) > 0,
-			}
-			arena.Plc.SetTowerLights(redTowerLights, blueTowerLights)
+			arena.Plc.SetTowerLights(
+				[3]bool{inGracePeriod, inGracePeriod, inGracePeriod}, [3]bool{inGracePeriod, inGracePeriod, inGracePeriod},
+			)
 		}
-	} else {
-		arena.Plc.SetTowerLights(
-			[3]bool{inGracePeriod, inGracePeriod, inGracePeriod}, [3]bool{inGracePeriod, inGracePeriod, inGracePeriod},
-		)
 	}
 }
 

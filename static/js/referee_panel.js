@@ -113,13 +113,18 @@ const handleRealtimeScore = function (data) {
 
   for (alliance of ["red", "blue"]) {
     let score;
+    let hubActive;
     if (alliance === "red") {
       score = data.Red.Score;
+      hubActive = data.Red.HubActive;
     } else {
       score = data.Blue.Score;
+      hubActive = data.Blue.HubActive;
     }
 
     let scoreRoot = `${alliance}ScoreSummary`;
+    $(`#${scoreRoot} .hub-active-indicator`).text(hubActive ? "(ACTIVE)" : "(INACTIVE)");
+    $(`#${scoreRoot} .hub-active-indicator`).attr("data-active", hubActive);
     $(`#${scoreRoot} .fuel-auto`).text(score.FuelAuto);
     $(`#${scoreRoot} .fuel-teleop`).text(score.FuelTeleop);
     $(`#${scoreRoot} .fuel-total`).text(score.FuelAuto + score.FuelTeleop);

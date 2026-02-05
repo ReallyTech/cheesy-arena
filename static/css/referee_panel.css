@@ -331,3 +331,17 @@ h3 {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 0.2vw;
 }
+
+.hub-active-indicator {
+  font-size: 0.7vw;
+  margin-left: 0.2vw;
+  font-weight: normal;
+}
+
+.hub-active-indicator[data-active="true"] {
+  color: #0f0;
+}
+
+.hub-active-indicator[data-active="false"] {
+  color: #f00;
+}

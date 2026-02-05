@@ -9,6 +9,7 @@ html {
   -moz-user-select: none;
   overflow: hidden;
 }
+
 #overlayCentering {
   position: absolute;
   bottom: -210px;
@@ -18,9 +19,11 @@ html {
   flex-direction: column;
   align-items: center;
 }
+
 #matchOverlayContainer {
   display: flex;
 }
+
 #matchOverlay {
   display: flex;
   flex-direction: column;
@@ -28,10 +31,12 @@ html {
   color: #222;
   font-size: 22px;
 }
+
 #matchOverlayTop {
   height: 100px;
   display: flex;
 }
+
 .playoff-alliance {
   position: relative;
   top: 31px;
@@ -47,6 +52,7 @@ html {
   font-size: 15px;
   font-weight: 200;
 }
+
 #leftPlayoffAlliance {
   left: 23px;
   justify-content: start;
@@ -54,6 +60,7 @@ html {
   border-bottom-left-radius: 50%;
   border-right: none;
 }
+
 #rightPlayoffAlliance {
   right: 23px;
   justify-content: end;
@@ -61,6 +68,7 @@ html {
   border-bottom-right-radius: 50%;
   border-left: none;
 }
+
 .teams {
   width: 70px;
   height: 100%;
@@ -73,6 +81,7 @@ html {
   font-size: 20px;
   line-height: 25px;
 }
+
 .teams div[data-yellow-card=true] {
   width: 90%;
   height: 32%;
@@ -82,27 +91,36 @@ html {
   align-items: center;
   background-color: #fc0;
 }
+
 #leftTeams {
   border-right: 1px solid #222;
 }
+
 #rightTeams {
   border-left: 1px solid #222;
 }
-.reversible-left[data-reversed=false], .reversible-right[data-reversed=true] {
+
+.reversible-left[data-reversed=false],
+.reversible-right[data-reversed=true] {
   background-color: #ff4444;
 }
-.reversible-left[data-reversed=true], .reversible-right[data-reversed=false] {
+
+.reversible-left[data-reversed=true],
+.reversible-right[data-reversed=false] {
   background-color: #2080ff;
 }
+
 .score {
   width: 0;
   height: 100%;
   display: flex;
   justify-content: flex-start;
 }
+
 .score-right {
   justify-content: flex-end;
 }
+
 .avatars {
   min-width: 50px;
   height: 100%;
@@ -111,9 +129,11 @@ html {
   justify-content: space-evenly;
   align-items: center;
 }
+
 .avatar {
   height: 25px;
 }
+
 .score-number {
   width: 130px;
   height: 100%;
@@ -125,9 +145,11 @@ html {
   color: #fff;
   opacity: 0;
 }
+
 .score-right .score-fields {
   align-items: flex-end;
 }
+
 .score-fields {
   height: 100%;
   width: 0;
@@ -136,19 +158,28 @@ html {
   justify-content: space-evenly;
   opacity: 0;
 }
+
 .score-field {
   display: flex;
   flex-direction: row;
+  transition: opacity 0.5s;
 }
+
+.score-field[data-active="false"] {
+  opacity: 0.15;
+}
+
 .coral-icon {
   width: 35px;
   margin: 0 12px;
 }
+
 .algae-icon {
   width: 31px;
   margin: 0 14px;
 }
-.score-field > div {
+
+.score-field>div {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -158,6 +189,7 @@ html {
   line-height: 27px;
   color: #fff;
 }
+
 #matchCircle {
   position: absolute;
   top: -25px;
@@ -167,11 +199,13 @@ html {
   background-color: #fff;
   border: 1px solid #222;
 }
+
 #logo {
   position: relative;
   top: 38px;
   height: 70px;
 }
+
 #matchTime {
   position: relative;
   top: 17px;
@@ -181,6 +215,7 @@ html {
   font-size: 32px;
   opacity: 0;
 }
+
 #eventMatchInfo {
   height: 0;
   display: none;
@@ -194,6 +229,7 @@ html {
   line-height: 30px;
   color: #fff;
 }
+
 #playoffSeriesStatus {
   width: 40px;
   height: 18px;
@@ -209,6 +245,7 @@ html {
   font-size: 15px;
   font-weight: 200;
 }
+
 #timeoutDetails {
   position: absolute;
   bottom: 95px;
@@ -224,17 +261,20 @@ html {
   color: #222;
   border: 1px solid #222;
 }
+
 #timeoutBreakDescription {
   font-weight: bold;
   font-size: 20px;
   opacity: 0;
 }
+
 #timeoutNextMatch {
   text-align: center;
   font-weight: bold;
   font-size: 14px;
   opacity: 0;
 }
+
 #blindsContainer {
   position: fixed;
   top: 0;
@@ -242,6 +282,7 @@ html {
   left: 0;
   right: 0;
 }
+
 .blinds {
   position: fixed;
   top: 0;
@@ -250,22 +291,27 @@ html {
   width: 50%;
   overflow: hidden;
 }
+
 .blinds.left {
   background-position: left;
   left: -50%;
 }
+
 .blinds.right {
   background-position: right;
   right: -50%;
 }
+
 .blinds.full {
   width: 100%;
   background-position: center;
   background-size: 100%;
 }
+
 .blinds.background {
   background-image: url("/static/img/endofmatch-bg.png");
 }
+
 .blindsCenter {
   position: absolute;
   top: 0;
@@ -282,26 +328,32 @@ html {
   -webkit-backface-visibility: hidden;
   z-index: 2;
 }
+
 .blindsCenter.full {
   left: 0;
   right: 0;
   transform: rotateY(-180deg);
 }
+
 .blinds.left .blindsCenter.blank {
   right: -155px;
 }
+
 .blinds.full .blindsCenter.blank {
   right: 0;
   left: 0;
 }
+
 .blinds.right .blindsCenter.blank {
   left: -155px;
 }
+
 #blindsLogo {
   position: relative;
   top: 55px;
   height: 220px;
 }
+
 #finalScoreCentering {
   position: fixed;
   width: 100%;
@@ -310,6 +362,7 @@ html {
   justify-content: center;
   align-items: center;
 }
+
 #finalScore {
   width: 1000px;
   display: flex;
@@ -317,10 +370,12 @@ html {
   border: 2px solid #333;
   opacity: 0;
 }
+
 .final-score-row {
   display: flex;
   flex-direction: row;
 }
+
 .final-score {
   width: 50%;
   height: 200px;
@@ -332,12 +387,15 @@ html {
   text-align: center;
   text-shadow: 0 0 3px #333;
 }
+
 #leftFinalScore {
   padding-right: 150px;
 }
+
 #rightFinalScore {
   padding-left: 150px;
 }
+
 .final-breakdown {
   height: 380px;
   display: flex;
@@ -348,6 +406,7 @@ html {
   font-family: "FuturaLT";
   font-size: 24px;
 }
+
 #leftFinalBreakdown div,
 #centerFinalBreakdown div,
 #rightFinalBreakdown div {
@@ -355,20 +414,24 @@ html {
   line-height: 32px;
   flex-shrink: 0;
 }
+
 .final-breakdown .playoff-hidden-field:not([style*="display: none"]),
 .final-breakdown .playoff-only-field:not([style*="display: none"]) {
   display: contents !important;
 }
+
 #leftFinalBreakdown {
   width: 60px;
   padding-right: 10px;
   align-items: flex-end;
 }
+
 #rightFinalBreakdown {
   width: 60px;
   padding-left: 10px;
   align-items: flex-start;
 }
+
 #centerFinalBreakdown {
   width: 280px;
   align-items: center;
@@ -376,17 +439,20 @@ html {
   border-left: 2px solid #333;
   border-right: 2px solid #333;
 }
+
 .final-breakdown-teams {
   flex-grow: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .final-teams {
   width: 250px;
   padding: 20px;
   border-radius: 20px;
 }
+
 .final-alliance {
   margin-top: -10px;
   margin-bottom: 10px;
@@ -396,17 +462,20 @@ html {
   color: #fff;
   font-size: 24px;
 }
+
 .final-team-row {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
+
 .final-team-avatar {
   width: 35px;
   height: 35px;
   margin-right: 5px;
 }
+
 .final-team-number {
   width: 85px;
   color: #fff;
@@ -415,6 +484,7 @@ html {
   line-height: 43px;
   text-align: center;
 }
+
 .final-team-card {
   width: 20px;
   margin-left: 5px;
@@ -422,36 +492,45 @@ html {
   justify-content: center;
   align-items: center;
 }
+
 .final-team-card div {
   display: none;
 }
-.final-team-card div[data-card=yellow], .final-team-card div[data-card=red] {
+
+.final-team-card div[data-card=yellow],
+.final-team-card div[data-card=red] {
   display: inline-block;
   width: 15px;
   height: 20px;
   border-radius: 4px;
   border: 1px solid #333;
 }
+
 .final-team-card div[data-card=yellow] {
   background-color: #da1;
 }
+
 .final-team-card div[data-card=red] {
   background-color: #e00;
 }
+
 .final-team-rank {
   width: 50px;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
 }
+
 .final-team-rank img {
   width: 15px;
   margin-right: 3px;
 }
+
 .final-team-rank div {
   color: #fff;
   font-size: 20px;
 }
+
 .final-destination {
   margin-top: 10px;
   width: 200px;
@@ -465,9 +544,11 @@ html {
   font-size: 15px;
   line-height: 18px;
 }
+
 .final-destination[data-won=true] {
   background-color: #fc3;
 }
+
 #finalEventMatchInfo {
   height: 60px;
   display: flex;
@@ -480,20 +561,25 @@ html {
   background-color: #444;
   color: #fff;
 }
+
 [data-checked=true] {
   color: #0c0;
 }
+
 [data-checked=false] {
   color: #e00;
 }
+
 .final-footer {
   float: left;
   width: 33.3%;
   white-space: nowrap;
 }
+
 #finalMatchName {
   text-align: right;
 }
+
 #bracket {
   position: fixed;
   top: 0;
@@ -505,9 +591,11 @@ html {
   opacity: 0;
   text-align: center;
 }
+
 #bracketSvg {
   width: 1920px;
 }
+
 #sponsor {
   position: fixed;
   width: 1000px;
@@ -523,19 +611,25 @@ html {
   background-color: #fff;
   text-align: center;
 }
-#sponsor .carousel-inner, #sponsor .carousel-item {
+
+#sponsor .carousel-inner,
+#sponsor .carousel-item {
   height: 100%;
 }
+
 .sponsor-image-container {
   width: 1000px;
   height: 500px;
   display: table-cell;
   vertical-align: middle;
 }
-#sponsor h1, #sponsor h2 {
+
+#sponsor h1,
+#sponsor h2 {
   font-family: "FuturaLTBold";
   margin: 0;
 }
+
 #sponsor h1 {
   font-size: 60px;
   background-color: #444;
@@ -547,21 +641,25 @@ html {
   right: 0;
   height: 96px;
 }
+
 #sponsor h2 {
   font-size: 6em;
   padding-top: 145px;
   line-height: 110px;
 }
+
 #sponsor img {
   max-width: 800px;
   max-height: 400px;
 }
+
 #allianceRankingsCentering {
   position: absolute;
   height: 100%;
   left: 3em;
   top: 3em;
 }
+
 #allianceRankings {
   max-width: 11em;
   max-height: 92%;
@@ -573,30 +671,36 @@ html {
   font-size: 2em;
   font-family: "FuturaLT";
 }
+
 .unpicked {
   width: 5.5em;
   display: flex;
   justify-content: start;
 }
+
 .unpicked-rank {
   width: 1.8em;
   text-align: right;
   color: #999;
 }
+
 .unpicked-team {
   margin-left: 0.3em;
   color: #222;
 }
+
 #allianceSelectionCentering {
   position: absolute;
   height: 100%;
   top: 3em;
   right: 3em;
 }
+
 #allianceSelection {
   display: table-cell;
   vertical-align: middle;
 }
+
 #allianceSelectionTable {
   background-color: #fff;
   border: 2px solid #222;
@@ -604,18 +708,22 @@ html {
   font-family: "FuturaLT";
   font-size: 2.6em;
 }
+
 #allianceSelectionTable tr:nth-child(even) {
   background-color: #ccc;
 }
+
 .alliance-cell {
   padding: 0px 20px;
   font-family: "FuturaLT";
   color: #999;
 }
+
 .selection-cell {
   width: 3.1em;
   color: #222;
 }
+
 #lowerThird {
   display: none;
   position: absolute;
@@ -628,17 +736,20 @@ html {
   width: 800px;
   height: 87px;
 }
+
 #lowerThirdLogo {
   margin: 12px 20px;
   height: 60px;
   float: left;
 }
+
 #lowerThirdTop {
   position: relative;
   top: 10px;
   display: none;
   font-family: "FuturaLTBold";
 }
+
 #lowerThirdBottom {
   display: none;
   font-family: "FuturaLT";
@@ -646,6 +757,7 @@ html {
   position: relative;
   top: 5px;
 }
+
 #lowerThirdSingle {
   display: none;
   font-family: "FuturaLTBold";

@@ -40,6 +40,7 @@ type MatchTimeMessage struct {
 type audienceAllianceScoreFields struct {
 	Score        *game.Score
 	ScoreSummary *game.ScoreSummary
+	HubActive    bool
 }
 
 // Instantiates notifiers and configures their message producing methods.
@@ -372,6 +373,7 @@ func getAudienceAllianceScoreFields(
 	fields := new(audienceAllianceScoreFields)
 	fields.Score = &allianceScore.CurrentScore
 	fields.ScoreSummary = allianceScoreSummary
+	fields.HubActive = allianceScore.HubActive
 	return fields
 }
 

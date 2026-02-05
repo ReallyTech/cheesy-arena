@@ -11,6 +11,7 @@ type RealtimeScore struct {
 	CurrentScore   game.Score
 	Cards          map[string]string
 	FoulsCommitted bool
+	HubActive      bool
 }
 
 func NewRealtimeScore() *RealtimeScore {

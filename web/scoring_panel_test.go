@@ -85,7 +85,7 @@ func TestScoringPanelWebsocket(t *testing.T) {
 	readWebsocketType(t, redWs, "realtimeScore")
 	readWebsocketType(t, blueWs, "realtimeScore")
 	assert.Equal(t, 1, web.arena.RedRealtimeScore.CurrentScore.TowerLevels[0])
-	assert.True(t, web.arena.RedRealtimeScore.CurrentScore.TowerIsAuto[0])
+	assert.True(t, web.arena.RedRealtimeScore.CurrentScore.TowerAuto[0])
 
 	// Test committing logic.
 	redWs.Write("commitMatch", nil)

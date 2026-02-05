@@ -61,6 +61,9 @@ const translateMatchTime = function (data, callback) {
 
 // Returns the per-period countdown for the given match state and overall time into the match.
 const getCountdown = function (matchState, matchTimeSec) {
+  if (!matchTiming) {
+    return 0;
+  }
   switch (matchStates[matchState]) {
     case "PRE_MATCH":
     case "START_MATCH":

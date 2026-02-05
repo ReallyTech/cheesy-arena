@@ -6,7 +6,13 @@ UI for entering and tracking fouls and red/yellow cards.
 */}}
 {{define "title"}}Referee Panel{{end}}
 {{define "body"}}
-<div id="matchName"></div>
+<div id="statusContainer">
+  <div id="matchName"></div>
+  <div id="countdownContainer">
+    <span id="matchState"></span>
+    <span id="matchTime"></span>
+  </div>
+</div>
 <div id="refereePanel">
   <div id="cards" class="headRef-dependent">
     <h3>Red/Yellow Cards</h3>
@@ -26,10 +32,6 @@ UI for entering and tracking fouls and red/yellow cards.
     </div>
   </div>
   <div id="fouls">
-    <div id="scoreSummary" class="headRef-dependent">
-      {{template "scoreSummary" (dict "id" "blueScoreSummary")}}
-      {{template "scoreSummary" (dict "id" "redScoreSummary")}}
-    </div>
     <h3>Fouls</h3>
     <div id="foulButtons">
       <div class="foul-button blue-foul" onclick="addFoul('blue', false);">Blue</div>
@@ -38,6 +40,10 @@ UI for entering and tracking fouls and red/yellow cards.
       <div class="foul-button red-foul" onclick="addFoul('red', true);">Red Major</div>
     </div>
     <div id="foulList"></div>
+  </div>
+  <div id="scoreSummary" class="headRef-dependent">
+    {{template "scoreSummary" (dict "id" "blueScoreSummary")}}
+    {{template "scoreSummary" (dict "id" "redScoreSummary")}}
   </div>
 </div>
 <p>Note: Team and rule assignment are optional.</p>
@@ -63,18 +69,24 @@ UI for entering and tracking fouls and red/yellow cards.
 {{define "scoreSummary"}}
 <div id="{{.id}}" class="scoreSummary">
   <div class="summary-header placeholder"></div>
-  <div class="summary-header team-1">0</div>
-  <div class="summary-header team-2">0</div>
-  <div class="summary-header team-3">0</div>
 
-  <div class="label">Fuel <span class="hub-active-indicator"></span></div>
-  <div class="wide-row">
-    Auto: <span class="fuel-auto">0</span> / Teleop: <span class="fuel-teleop">0</span> / Total: <span class="fuel-total">0</span>
+  <div class="summary-section">
+    <div class="summary-label">Fuel <span class="hub-active-indicator"></span></div>
+    <div class="fuel-row">Auto: <span class="fuel-auto">0</span> / TeleOp: <span class="fuel-teleop">0</span></div>
+    <div class="fuel-row total-row">Total: <span class="fuel-total">0</span></div>
   </div>
 
-  <div class="label">Tower</div>
-  <div class="tower-status team-1-tower">None</div>
-  <div class="tower-status team-2-tower">None</div>
-  <div class="tower-status team-3-tower">None</div>
+  <div class="summary-section">
+    <div class="summary-label">Tower</div>
+    <div class="tower-row team-1-row">
+      <span class="team-id">0</span>: <span class="tower-status">None</span>
+    </div>
+    <div class="tower-row team-2-row">
+      <span class="team-id">0</span>: <span class="tower-status">None</span>
+    </div>
+    <div class="tower-row team-3-row">
+      <span class="team-id">0</span>: <span class="tower-status">None</span>
+    </div>
+  </div>
 </div>
 {{end}}

@@ -15,7 +15,7 @@ func TestScore1() *Score {
 		FuelAuto:       20,
 		FuelTeleop:     150,
 		TowerLevels:    [3]int{1, 2, 0},
-		TowerIsAuto:    [3]bool{true, false, false},
+		TowerAuto:      [3]bool{true, false, false},
 		Fouls:          fouls,
 		PlayoffDq:      false,
 	}
@@ -27,7 +27,7 @@ func TestScore2() *Score {
 		FuelAuto:       10,
 		FuelTeleop:     95,
 		TowerLevels:    [3]int{1, 1, 3},
-		TowerIsAuto:    [3]bool{true, true, false},
+		TowerAuto:      [3]bool{true, true, false},
 		Fouls:          []Foul{},
 		PlayoffDq:      false,
 	}

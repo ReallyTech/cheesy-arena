@@ -36,13 +36,8 @@ const renderResults = function (alliance) {
 
   for (let i = 0; i < 3; i++) {
     getInputElement(alliance, `RobotsBypassed${i}`).prop("checked", result.score.RobotsBypassed[i]);
-    if (result.score.TowerIsAuto[i]) {
-      getSelectElement(alliance, `TowerAutoStatuses${i}`).val(result.score.TowerLevels[i]);
-      getSelectElement(alliance, `TowerTeleopStatuses${i}`).val(0);
-    } else {
-      getSelectElement(alliance, `TowerAutoStatuses${i}`).val(0);
-      getSelectElement(alliance, `TowerTeleopStatuses${i}`).val(result.score.TowerLevels[i]);
-    }
+    getSelectElement(alliance, `TowerAutoStatuses${i}`).val(result.score.TowerAuto[i].toString());
+    getSelectElement(alliance, `TowerLevels${i}`).val(result.score.TowerLevels[i]);
   }
 
   if (result.score.Fouls != null) {
@@ -73,18 +68,11 @@ const updateResults = function (alliance) {
   result.score.FuelTeleop = parseInt(formData[`${alliance}FuelTeleop`]);
 
   result.score.TowerLevels = [];
-  result.score.TowerIsAuto = [];
+  result.score.TowerAuto = [];
   for (let i = 0; i < 3; i++) {
     result.score.RobotsBypassed[i] = formData[`${alliance}RobotsBypassed${i}`] === "on";
-    const autoStatus = parseInt(getSelectElement(alliance, `TowerAutoStatuses${i}`).val());
-    const teleopStatus = parseInt(getSelectElement(alliance, `TowerTeleopStatuses${i}`).val());
-    if (autoStatus > 0) {
-      result.score.TowerLevels[i] = autoStatus;
-      result.score.TowerIsAuto[i] = true;
-    } else {
-      result.score.TowerLevels[i] = teleopStatus;
-      result.score.TowerIsAuto[i] = false;
-    }
+    result.score.TowerAuto[i] = getSelectElement(alliance, `TowerAutoStatuses${i}`).val() === "true";
+    result.score.TowerLevels[i] = parseInt(getSelectElement(alliance, `TowerLevels${i}`).val());
   }
 
   result.score.Fouls = [];

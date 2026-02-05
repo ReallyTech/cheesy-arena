@@ -7,15 +7,16 @@ package web
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/mitchellh/mapstructure"
-	"io"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 // Renders the referee interface for assigning fouls.
@@ -83,6 +84,7 @@ func (web *Web) refereePanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 	go ws.HandleNotifiers(
 		web.arena.MatchLoadNotifier,
 		web.arena.MatchTimeNotifier,
+		web.arena.MatchTimingNotifier,
 		web.arena.RealtimeScoreNotifier,
 		web.arena.ScoringStatusNotifier,
 		web.arena.ReloadDisplaysNotifier,

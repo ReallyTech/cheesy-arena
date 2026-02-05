@@ -10,7 +10,7 @@ type Score struct {
 	FuelAuto       int
 	FuelTeleop     int
 	TowerLevels    [3]int
-	TowerIsAuto    [3]bool
+	TowerAuto      [3]bool
 	Fouls          []Foul
 	PlayoffDq      bool
 }
@@ -34,29 +34,28 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 	summary.TotalFuel = score.FuelAuto + score.FuelTeleop
 
 	// Calculate Tower points
-	autoLevel1Count := 0
-	for i, level := range score.TowerLevels {
-		if level == 1 && score.TowerIsAuto[i] {
-			autoLevel1Count++
+	autoClimbCount := 0
+	for _, auto := range score.TowerAuto {
+		if auto {
+			autoClimbCount++
 		}
 	}
-	if autoLevel1Count > 2 {
-		autoLevel1Count = 2
+	if autoClimbCount > 2 {
+		autoClimbCount = 2
 	}
 	summary.AutoFuelPoints = score.FuelAuto
-	summary.AutoTowerPoints = autoLevel1Count * 15
+	summary.AutoTowerPoints = autoClimbCount * 15
 	summary.AutoPoints = summary.AutoFuelPoints + summary.AutoTowerPoints
 	summary.TowerPoints = summary.AutoTowerPoints
 	summary.TotalTowers = 0
 
-	for i, level := range score.TowerLevels {
+	for _, level := range score.TowerLevels {
 		if level > 0 {
 			summary.TotalTowers++
 		}
-		if score.TowerIsAuto[i] {
-			continue // Already counted in AutoTowerPoints if L1
-		}
 		switch level {
+		case 1:
+			summary.TowerPoints += 10
 		case 2:
 			summary.TowerPoints += 20
 		case 3:
@@ -110,7 +109,7 @@ func (score *Score) Equals(other *Score) bool {
 		score.FuelAuto != other.FuelAuto ||
 		score.FuelTeleop != other.FuelTeleop ||
 		score.TowerLevels != other.TowerLevels ||
-		score.TowerIsAuto != other.TowerIsAuto ||
+		score.TowerAuto != other.TowerAuto ||
 		score.PlayoffDq != other.PlayoffDq ||
 		len(score.Fouls) != len(other.Fouls) {
 		return false

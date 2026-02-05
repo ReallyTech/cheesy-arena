@@ -109,6 +109,7 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 	go ws.HandleNotifiers(
 		web.arena.MatchLoadNotifier,
 		web.arena.MatchTimeNotifier,
+		web.arena.MatchTimingNotifier,
 		web.arena.RealtimeScoreNotifier,
 		web.arena.ReloadDisplaysNotifier,
 	)
@@ -167,7 +168,7 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 
 			if args.TeamPosition >= 1 && args.TeamPosition <= 3 && args.Level >= 0 && args.Level <= 3 {
 				score.TowerLevels[args.TeamPosition-1] = args.Level
-				score.TowerIsAuto[args.TeamPosition-1] = args.IsAuto
+				score.TowerAuto[args.TeamPosition-1] = args.IsAuto
 				scoreChanged = true
 			}
 		} else if command == "addFoul" {

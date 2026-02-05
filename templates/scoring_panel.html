@@ -11,74 +11,62 @@ UI for entering realtime scores.
 {{define "body"}}
 <div class="container" data-alliance="{{.Position.Alliance}}">
   <header id="banner">
-    <div class="banner-title">Tower</div>
-    <div class="screen-title">{{.Position.Title}} - <span id="matchName">&nbsp;</span></div>
-    <div class="banner-title">Fuel</div>
+    <div class="banner-title"></div>
+    <div class="screen-title">
+      {{.Position.Title}} - <span id="matchName">&nbsp;</span>
+      <span id="matchState"></span>
+      <span id="matchTime"></span>
+    </div>
+    <div class="banner-title"></div>
   </header>
   <main>
-    <div id="tower-controls" class="p-3">
-      <div id="tower-auto" class="mb-4">
-        <h5 class="text-white mb-2">Tower Level 1 (Auto)</h5>
-        <div class="d-flex justify-content-evenly gap-3" style="height: 100px;">
-          {{range $i, $v := seq 3}}
-          {{template "teamButton" (dict "id" (printf "tower-auto-%d" $v) "index" $v "class" "team-button tower-auto-btn")}}
-          {{end}}
+    <div class="d-flex flex-row flex-grow-1">
+      <div id="tower-controls" class="p-3 flex-fill d-flex flex-column justify-content-center">
+        <div id="tower-auto" class="mb-5">
+          <h5 class="text-white mb-2">Auto Climb</h5>
+          <div class="d-flex justify-content-evenly gap-3" style="height: 120px;">
+            {{range $i, $v := seq 3}}
+            {{template "teamButton" (dict "id" (printf "tower-auto-%d" $v) "index" $v "class" "team-button tower-auto-btn")}}
+            {{end}}
+          </div>
+        </div>
+        <div id="tower-teleop">
+          <h5 class="text-white mb-2">Climb Level</h5>
+          <div class="d-flex justify-content-evenly gap-3" style="height: 120px;">
+            {{range $i, $v := seq 3}}
+            {{template "teamButton" (dict "id" (printf "tower-teleop-%d" $v) "index" $v "class" "team-button tower-teleop-btn")}}
+            {{end}}
+          </div>
         </div>
       </div>
-      <div id="tower-teleop">
-        <h5 class="text-white mb-2">Tower Level 2/3 (Teleop)</h5>
-        <div class="d-flex justify-content-evenly gap-3" style="height: 100px;">
-          {{range $i, $v := seq 3}}
-          {{template "teamButton" (dict "id" (printf "tower-teleop-%d" $v) "index" $v "class" "team-button tower-teleop-btn")}}
-          {{end}}
-        </div>
-      </div>
-    </div>
 
-    <div id="fuel-controls" class="flex-grow-1 d-flex flex-column justify-content-center">
-      {{if not .PlcIsEnabled}}
-      <div class="d-flex flex-wrap justify-content-center gap-3 p-3">
-        {{template "counter" (dict "id" "fuel-auto" "label" "Auto")}}
-        {{template "counter" (dict "id" "fuel-teleop" "label" "Teleop")}}
+      <div id="fuel-controls" class="p-3 flex-fill d-flex flex-column justify-content-center">
+        <div id="hub-active-indicator" class="mb-3 d-flex align-items-center justify-content-center gap-2">
+          <div class="indicator-dot"></div>
+          <span class="indicator-label text-white">HUB ACTIVE</span>
+        </div>
+        {{if not .PlcIsEnabled}}
+        <div class="d-flex flex-column justify-content-center align-items-center gap-3">
+          {{template "counter" (dict "id" "fuel-auto" "label" "Auto")}}
+          {{template "counter" (dict "id" "fuel-teleop" "label" "Teleop")}}
+        </div>
+        {{else}}
+        <div class="text-center p-5 text-white">
+          <h4><i class="bi bi-cpu"></i> Fuel is being tracked automatically by PLC.</h4>
+        </div>
+        {{end}}
       </div>
-      {{else}}
-      <div class="text-center p-5 text-white">
-        <h4><i class="bi bi-cpu"></i> Fuel is being tracked automatically by PLC.</h4>
-      </div>
-      {{end}}
     </div>
 
     <div id="bottom-controls" class="p-3 gap-3">
       <button id="commit" class="scoring-btn" ontouchstart disabled>Commit</button>
-      <button id="fouls-button" class="scoring-btn" ontouchstart disabled>Fouls</button>
     </div>
   </main>
-
-  <dialog id="fouls-dialog">
-    <div class="dialog-container">
-      <div class="dialog-banner">Fouls</div>
-      <div id="foul-container">
-        <button class="foul-button red" data-alliance="red" data-type="foul" ontouchstart>
-          <div class="foul-button-label">Red Foul</div>
-        </button>
-        <button class="foul-button red" data-alliance="red" data-type="tech" ontouchstart>
-          <div class="foul-button-label">Red Tech Foul</div>
-        </button>
-        <button class="foul-button blue" data-alliance="blue" data-type="foul" ontouchstart>
-          <div class="foul-button-label">Blue Foul</div>
-        </button>
-        <button class="foul-button blue" data-alliance="blue" data-type="tech" ontouchstart>
-          <div class="foul-button-label">Blue Tech Foul</div>
-        </button>
-      </div>
-      <button class="dialog-close" onclick="closeFoulsDialog();">Close</button>
-    </div>
-  </dialog>
 </div>
 {{end}}
 
 {{define "teamButton"}}
-<button id="{{.id}}" class="{{.class}}" data-index="{{.index}}" ontouchstart disabled>
+<button id="{{.id}}" class="{{.class}}" data-index="{{.index}}" ontouchstart>
   <div class="team-num">Team {{.index}}</div>
   <div class="team-text" id="{{.id}}-status">None</div>
 </button>
@@ -86,12 +74,12 @@ UI for entering realtime scores.
 
 {{define "counter"}}
 <div class="counter" data-id="{{.id}}">
-  <button class="minus" ontouchstart disabled>-</button>
+  <button class="minus" ontouchstart>-</button>
   <div class="counter-status">
     <div class="counter-label">{{.label}}</div>
     <div class="counter-main-value" id="value-{{.id}}">0</div>
   </div>
-  <button class="plus" ontouchstart disabled>+</button>
+  <button class="plus" ontouchstart>+</button>
 </div>
 {{end}}
 
@@ -99,4 +87,3 @@ UI for entering realtime scores.
 <script src="/static/js/match_timing.js"></script>
 <script src="/static/js/scoring_panel.js"></script>
 {{end}}
-

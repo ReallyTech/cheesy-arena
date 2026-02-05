@@ -18,40 +18,6 @@ let inTeleop = false;
 // True when post-auto and in edit auto mode
 let editingAuto = false;
 
-let localFoulCounts = {
-  "red-minor": 0,
-  "blue-minor": 0,
-  "red-major": 0,
-  "blue-major": 0,
-}
-
-// Handle controls to open/close the endgame dialog
-const endgameDialog = $("#endgame-dialog")[0];
-const showEndgameDialog = function () {
-  endgameDialog.showModal();
-}
-const closeEndgameDialog = function () {
-  endgameDialog.close();
-}
-const closeEndgameDialogIfOutside = function (event) {
-  if (event.target === endgameDialog) {
-    closeEndgameDialog();
-  }
-}
-
-const foulsDialog = $("#fouls-dialog")[0];
-const showFoulsDialog = function () {
-  foulsDialog.showModal();
-}
-const closeFoulsDialog = function () {
-  foulsDialog.close();
-}
-$(document).on("click", "#fouls-dialog", function (event) {
-  if (event.target === foulsDialog) {
-    closeFoulsDialog();
-  }
-});
-
 // Handles a websocket message to update the teams for the current match.
 const handleMatchLoad = function (data) {
   $("#matchName").text(data.Match.LongName);
@@ -60,16 +26,27 @@ const handleMatchLoad = function (data) {
     const pos = i + 1;
     $(`#tower-auto-${pos} .team-num`).text("Team " + (teams[i] || ""));
     $(`#tower-teleop-${pos} .team-num`).text("Team " + (teams[i] || ""));
-  }
-};
 
-const addFoul = function (alliance, type) {
-  const isMajor = type === "tech";
-  websocket.send("addFoul", { Alliance: alliance, IsMajor: isMajor });
-}
+    // Reset buttons on match load
+    $(`#tower-auto-${pos}`).attr("data-selected", "false");
+    $(`#tower-auto-${pos}-status`).text("None");
+    $(`#tower-teleop-${pos}`).attr("data-selected", "false");
+    $(`#tower-teleop-${pos}`).attr("data-level", "0");
+    $(`#tower-teleop-${pos}-status`).text("None");
+  }
+
+  // Reset counters on match load
+  $("#value-fuel-auto").text("0");
+  $("#value-fuel-teleop").text("0");
+  $("#hub-active-indicator").attr("data-hub-active", "false");
+};
 
 // Handles a websocket message to update the match status.
 const handleMatchTime = function (data) {
+  translateMatchTime(data, function (state, stateText, countdown) {
+    $("#matchState").text(stateText);
+    $("#matchTime").text(getCountdownString(countdown));
+  });
   switch (matchStates[data.MatchState]) {
     case "AUTO_PERIOD":
     case "PAUSE_PERIOD":
@@ -102,12 +79,9 @@ const handleMatchTime = function (data) {
 
 // Refresh which UI controls are enabled/disabled
 const updateUIMode = function () {
-  $(".team-button").prop('disabled', !scoringAvailable);
-  $("#tower-teleop .team-button").prop('disabled', !inTeleop || !scoringAvailable);
-  $("#tower-auto .team-button").prop('disabled', inTeleop || !scoringAvailable);
-  $(".counter button").prop('disabled', !scoringAvailable);
+  $(".team-button").prop('disabled', false);
+  $(".counter button").prop('disabled', false);
   $("#commit").prop('disabled', !commitAvailable);
-  $("#fouls-button").prop('disabled', !scoringAvailable);
   $(".container").attr("data-in-teleop", inTeleop && scoringAvailable);
 }
 
@@ -119,52 +93,52 @@ const handleRealtimeScore = function (data) {
   for (let i = 0; i < 3; i++) {
     const pos = i + 1;
     const level = score.TowerLevels[i];
-    const isAuto = score.TowerIsAuto[i];
+    const isAuto = score.TowerAuto[i];
 
     let levelText = "None";
     if (level === 1) levelText = "Level 1";
     if (level === 2) levelText = "Level 2";
     if (level === 3) levelText = "Level 3";
 
-    if (isAuto && level === 1) {
-      $(`#tower-auto-${pos}-status`).text("Level 1");
-      $(`#tower-auto-${pos}`).attr("data-selected", "true");
-      $(`#tower-teleop-${pos}-status`).text("None");
-      $(`#tower-teleop-${pos}`).attr("data-selected", "false");
-    } else {
-      $(`#tower-auto-${pos}-status`).text("None");
-      $(`#tower-auto-${pos}`).attr("data-selected", "false");
-      $(`#tower-teleop-${pos}-status`).text(levelText);
-      $(`#tower-teleop-${pos}`).attr("data-selected", level > 0 ? "true" : "false");
-    }
+    // Auto button display
+    $(`#tower-auto-${pos}-status`).text(isAuto ? "Auto" : "None");
+    $(`#tower-auto-${pos}`).attr("data-selected", isAuto ? "true" : "false");
+
+    // Teleop button display
+    $(`#tower-teleop-${pos}-status`).text(levelText);
+    $(`#tower-teleop-${pos}`).attr("data-selected", level > 0 ? "true" : "false");
+    $(`#tower-teleop-${pos}`).attr("data-level", level.toString());
   }
 
   $(`#value-fuel-auto`).text(score.FuelAuto);
   $(`#value-fuel-teleop`).text(score.FuelTeleop);
+
+  $("#hub-active-indicator").attr("data-hub-active", realtimeScore.HubActive);
 };
 
 const cycleTowerAuto = function (index) {
-  // Toggle between level 0 and level 1 (auto)
-  let level = $(`#tower-auto-${index}-status`).text() === "Level 1" ? 0 : 1;
+  // Toggle between Auto and None
+  const isAuto = $(`#tower-auto-${index}-status`).text() !== "Auto";
+  const level = parseInt($(`#tower-teleop-${index}`).attr("data-level"));
+
   websocket.send("tower", {
     TeamPosition: index,
     Level: level,
-    IsAuto: level === 1
+    IsAuto: isAuto
   });
 }
 
 const cycleTowerTeleop = function (index) {
-  // Toggle between 0 -> 2 -> 3 -> 0
-  let current = $(`#tower-teleop-${index}-status`).text();
-  let level = 0;
-  if (current === "None") level = 2;
-  else if (current === "Level 2") level = 3;
-  else level = 0;
+  // Cycle between 0 -> 1 -> 2 -> 3 -> 0
+  let level = parseInt($(`#tower-teleop-${index}`).attr("data-level"));
+  const isAuto = $(`#tower-auto-${index}-status`).text() === "Auto";
+
+  level = (level + 1) % 4;
 
   websocket.send("tower", {
     TeamPosition: index,
     Level: level,
-    IsAuto: false
+    IsAuto: isAuto
   });
 }
 
@@ -206,17 +180,12 @@ $(function () {
   $(document).on("click", "#commit", function () {
     commitMatchScore();
   });
-  $(document).on("click", "#fouls-button", function () {
-    showFoulsDialog();
-  });
-  $(document).on("click", ".foul-button", function () {
-    addFoul($(this).data("alliance"), $(this).data("type"));
-  });
 
   // Set up the websocket back to the server.
   websocket = new CheesyWebsocket("/panels/scoring/" + alliance + "/websocket", {
     matchLoad: function (event) { handleMatchLoad(event.data); },
     matchTime: function (event) { handleMatchTime(event.data); },
+    matchTiming: function (event) { handleMatchTiming(event.data); },
     realtimeScore: function (event) { handleRealtimeScore(event.data); },
     resetLocalState: function (event) { committed = false; updateUIMode(); },
   });

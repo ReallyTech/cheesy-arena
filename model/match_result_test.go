@@ -29,7 +29,7 @@ func TestMatchResultCrud(t *testing.T) {
 	assert.Equal(t, matchResult, matchResult2)
 
 	matchResult.BlueScore.TowerLevels = [3]int{1, 0, 2}
-	matchResult.BlueScore.TowerIsAuto = [3]bool{false, false, false}
+	matchResult.BlueScore.TowerAuto = [3]bool{false, false, false}
 	assert.Nil(t, db.UpdateMatchResult(matchResult))
 	matchResult2, err = db.GetMatchResultForMatch(254)
 	assert.Nil(t, err)

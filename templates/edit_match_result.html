@@ -50,8 +50,8 @@ UI for manually editing the result for a match.
         <div class="col-lg-2">
           <label class="control-label">Team {{ printf "{{team%d}}" (add $i 1) }}</label>
           <select class="form-select ms-3" name="{{" {{alliance}}"}}TowerAutoStatuses{{$i}}">
-            <option value="0">None</option>
-            <option value="1">Level 1</option>
+            <option value="false">None</option>
+            <option value="true">Auto Climb</option>
           </select>
         </div>
         {{end}}
@@ -65,13 +65,14 @@ UI for manually editing the result for a match.
           <input type="text" class="form-control input-sm" name="{{" {{alliance}}"}}FuelTeleop">
         </div>
       </div>
-      <h6 class="fw-bold mb-2">Tower Teleop Status</h6>
+      <h6 class="fw-bold mb-2">Tower Level</h6>
       <div class="row mb-3">
         {{range $i, $v := seq 3}}
         <div class="col-lg-2">
           <label class="control-label">Team {{ printf "{{team%d}}" (add $i 1) }}</label>
-          <select class="form-select ms-3" name="{{" {{alliance}}"}}TowerTeleopStatuses{{$i}}">
+          <select class="form-select ms-3" name="{{" {{alliance}}"}}TowerLevels{{$i}}">
             <option value="0">None</option>
+            <option value="1">Level 1</option>
             <option value="2">Level 2</option>
             <option value="3">Level 3</option>
           </select>

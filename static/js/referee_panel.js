@@ -73,19 +73,23 @@ var handleMatchLoad = function (data) {
   setTeamCard("blue", 2, data.Teams["B2"]);
   setTeamCard("blue", 3, data.Teams["B3"]);
 
-  $("#redScoreSummary .team-1").text(data.Teams["R1"].Id);
-  $("#redScoreSummary .team-2").text(data.Teams["R2"].Id);
-  $("#redScoreSummary .team-3").text(data.Teams["R3"].Id);
+  $("#redScoreSummary .team-1-row .team-id").text(data.Teams["R1"].Id || 0);
+  $("#redScoreSummary .team-2-row .team-id").text(data.Teams["R2"].Id || 0);
+  $("#redScoreSummary .team-3-row .team-id").text(data.Teams["R3"].Id || 0);
   $("#redScoreSummary .placeholder").text("Red").css("visibility", "visible");
-  $("#blueScoreSummary .team-1").text(data.Teams["B1"].Id);
-  $("#blueScoreSummary .team-2").text(data.Teams["B2"].Id);
-  $("#blueScoreSummary .team-3").text(data.Teams["B3"].Id);
+  $("#blueScoreSummary .team-1-row .team-id").text(data.Teams["B1"].Id || 0);
+  $("#blueScoreSummary .team-2-row .team-id").text(data.Teams["B2"].Id || 0);
+  $("#blueScoreSummary .team-3-row .team-id").text(data.Teams["B3"].Id || 0);
   $("#blueScoreSummary .placeholder").text("Blue").css("visibility", "visible");
 };
 
 // Handles a websocket message to update the match status.
 const handleMatchTime = function (data) {
   $(".control-button").attr("data-enabled", matchStates[data.MatchState] === "POST_MATCH");
+  translateMatchTime(data, function (state, stateText, countdown) {
+    $("#matchState").text(stateText);
+    $("#matchTime").text(getCountdownString(countdown));
+  });
 };
 
 const towerLevelNames = [
@@ -128,9 +132,13 @@ const handleRealtimeScore = function (data) {
     $(`#${scoreRoot} .fuel-auto`).text(score.FuelAuto);
     $(`#${scoreRoot} .fuel-teleop`).text(score.FuelTeleop);
     $(`#${scoreRoot} .fuel-total`).text(score.FuelAuto + score.FuelTeleop);
-    $(`#${scoreRoot} .team-1-tower`).text(towerLevelNames[score.TowerLevels[0]]);
-    $(`#${scoreRoot} .team-2-tower`).text(towerLevelNames[score.TowerLevels[1]]);
-    $(`#${scoreRoot} .team-3-tower`).text(towerLevelNames[score.TowerLevels[2]]);
+    for (let i = 0; i < 3; i++) {
+      const isAuto = score.TowerAuto[i] ? "Auto" : "-";
+      const level = towerLevelNames[score.TowerLevels[i]];
+      const targetRow = $(`#${scoreRoot} .team-${i + 1}-row`);
+      targetRow.find(".tower-status").text(`${isAuto} / ${level}`);
+      targetRow.find(".tower-status").attr("data-is-auto", score.TowerAuto[i]);
+    }
   }
 }
 
@@ -190,6 +198,9 @@ $(function () {
     },
     matchTime: function (event) {
       handleMatchTime(event.data);
+    },
+    matchTiming: function (event) {
+      handleMatchTiming(event.data);
     },
     realtimeScore: function (event) {
       handleRealtimeScore(event.data);

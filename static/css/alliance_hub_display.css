@@ -1,0 +1,61 @@
+/*
+  Copyright 2024 Team 254. All Rights Reserved.
+  Author: pat@patfairbank.com (Patrick Fairbank)
+*/
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: "FuturaLTBold", sans-serif;
+    color: #fff;
+}
+
+#hub-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    transition: background-color 0.5s ease;
+}
+
+body[data-alliance="red"] #hub-container {
+    background-color: #600;
+}
+
+body[data-alliance="blue"] #hub-container {
+    background-color: #004;
+}
+
+/* When Hub is Active, use a brighter version */
+body[data-alliance="red"] #hub-container[data-hub-active="true"] {
+    background-color: #f00;
+}
+
+body[data-alliance="blue"] #hub-container[data-hub-active="true"] {
+    background-color: #00f;
+}
+
+#hub-status-text {
+    font-size: 15vw;
+    line-height: normal;
+    opacity: 0.5;
+    transition: opacity 0.5s ease;
+}
+
+#hub-container[data-hub-active="true"] #hub-status-text {
+    opacity: 1;
+}
+
+#thresholds-bar {
+    font-size: 5vw;
+    margin-top: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 40px;
+    border-radius: 20px;
+}

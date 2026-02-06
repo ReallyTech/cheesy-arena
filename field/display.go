@@ -7,7 +7,6 @@ package field
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/websocket"
 	"net/url"
 	"reflect"
 	"sort"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	TwitchStreamDisplay
 	WallDisplay
 	WebpageDisplay
+	AllianceHubDisplay
 )
 
 var DisplayTypeNames = map[DisplayType]string{
@@ -53,6 +55,7 @@ var DisplayTypeNames = map[DisplayType]string{
 	TwitchStreamDisplay:    "Twitch Stream",
 	WallDisplay:            "Wall",
 	WebpageDisplay:         "Web Page",
+	AllianceHubDisplay:     "Alliance Hub",
 }
 
 var displayTypePaths = map[DisplayType]string{
@@ -68,6 +71,7 @@ var displayTypePaths = map[DisplayType]string{
 	TwitchStreamDisplay:    "/displays/twitch",
 	WallDisplay:            "/displays/wall",
 	WebpageDisplay:         "/displays/webpage",
+	AllianceHubDisplay:     "/displays/alliance_hub",
 }
 
 var displayRegistryMutex sync.Mutex

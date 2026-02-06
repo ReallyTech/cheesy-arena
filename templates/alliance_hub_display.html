@@ -1,0 +1,32 @@
+{{/*
+Copyright 2024 Team 254. All Rights Reserved.
+Author: pat@patfairbank.com (Patrick Fairbank)
+
+Display shown to show the alliance hub status.
+*/}}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Alliance Hub Display - {{.EventSettings.Name}} - Cheesy Arena </title>
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <link rel="stylesheet" href="/static/css/lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/css/cheesy-arena.css" />
+    <link rel="stylesheet" href="/static/css/alliance_hub_display.css" />
+</head>
+
+<body>
+    <div id="hub-container">
+        <div id="hub-status-text">INACTIVE</div>
+        <div id="thresholds-bar">
+            Fuel: <span id="fuel-count">0</span> / <span id="fuel-threshold">0</span>
+        </div>
+    </div>
+    <script src="/static/js/lib/jquery.min.js"></script>
+    <script src="/static/js/lib/jquery.json-2.4.min.js"></script>
+    <script src="/static/js/lib/jquery.websocket-0.0.1.js"></script>
+    <script src="/static/js/cheesy-websocket.js"></script>
+    <script src="/static/js/alliance_hub_display.js"></script>
+</body>
+
+</html>

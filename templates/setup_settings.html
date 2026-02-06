@@ -28,20 +28,17 @@ UI for configuring event settings.
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="field-tab" data-bs-toggle="tab" data-bs-target="#field" type="button"
-              role="tab">
+            <button class="nav-link" id="field-tab" data-bs-toggle="tab" data-bs-target="#field" type="button" role="tab">
               Field
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="publishing-tab" data-bs-toggle="tab" data-bs-target="#publishing" type="button"
-              role="tab">
+            <button class="nav-link" id="publishing-tab" data-bs-toggle="tab" data-bs-target="#publishing" type="button" role="tab">
               Publishing
             </button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" id="automation-tab" data-bs-toggle="tab" data-bs-target="#automation" type="button"
-              role="tab">
+            <button class="nav-link" id="automation-tab" data-bs-toggle="tab" data-bs-target="#automation" type="button" role="tab">
               Automation
             </button>
           </li>
@@ -61,17 +58,13 @@ UI for configuring event settings.
                 <div class="col-lg-6">
                   <div class="radio">
                     <label>
-                      <input type="radio" name="playoffType" value="DoubleEliminationPlayoff"
-                        onclick="updateNumPlayoffAlliances(true);"
-                        {{if eq .PlayoffType 0}}checked{{end}}>
-                      Double-Elimination (8 alliances)
+                      <input type="radio" name="playoffType" value="DoubleEliminationPlayoff" {{if eq .PlayoffType 0}}checked{{end}}>
+                      Double-Elimination (2-8 alliances)
                     </label>
                   </div>
                   <div class="radio">
                     <label>
-                      <input type="radio" name="playoffType" value="SingleEliminationPlayoff"
-                        onclick="updateNumPlayoffAlliances(false);"
-                        {{if eq .PlayoffType 1}}checked{{end}}>
+                      <input type="radio" name="playoffType" value="SingleEliminationPlayoff" {{if eq .PlayoffType 1}}checked{{end}}>
                       Single-Elimination (2-16 alliances)
                     </label>
                   </div>
@@ -80,8 +73,7 @@ UI for configuring event settings.
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Number of Alliances</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="numPlayoffAlliances" value="{{.NumPlayoffAlliances}}"
-                    {{if eq .PlayoffType 0}}disabled{{end}}>
+                  <input type="text" class="form-control" name="numPlayoffAlliances" value="{{.NumPlayoffAlliances}}">
                 </div>
               </div>
               <div class="row mb-3">
@@ -89,15 +81,13 @@ UI for configuring event settings.
                 <div class="col-lg-6">
                   <div class="radio">
                     <label>
-                      <input type="radio" name="selectionRound2Order" value="F"
-                        {{if eq .SelectionRound2Order "F"}}checked{{end}}>
+                      <input type="radio" name="selectionRound2Order" value="F" {{if eq .SelectionRound2Order "F" }}checked{{end}}>
                       First to Last
                     </label>
                   </div>
                   <div class="radio">
                     <label>
-                      <input type="radio" name="selectionRound2Order" value="L"
-                        {{if eq .SelectionRound2Order "L"}}checked{{end}}>
+                      <input type="radio" name="selectionRound2Order" value="L" {{if eq .SelectionRound2Order "L" }}checked{{end}}>
                       Last to First
                     </label>
                   </div>
@@ -108,22 +98,19 @@ UI for configuring event settings.
                 <div class="col-lg-6">
                   <div class="radio">
                     <label>
-                      <input type="radio" name="selectionRound3Order" value="F"
-                        {{if eq .SelectionRound3Order "F"}}checked{{end}}>
+                      <input type="radio" name="selectionRound3Order" value="F" {{if eq .SelectionRound3Order "F" }}checked{{end}}>
                       First to Last
                     </label>
                   </div>
                   <div class="radio">
                     <label>
-                      <input type="radio" name="selectionRound3Order" value="L"
-                        {{if eq .SelectionRound3Order "L"}}checked{{end}}>
+                      <input type="radio" name="selectionRound3Order" value="L" {{if eq .SelectionRound3Order "L" }}checked{{end}}>
                       Last to First
                     </label>
                   </div>
                   <div class="radio">
                     <label>
-                      <input type="radio" name="selectionRound3Order" value=""
-                        {{if eq .SelectionRound3Order ""}}checked{{end}}>
+                      <input type="radio" name="selectionRound3Order" value="" {{if eq .SelectionRound3Order "" }}checked{{end}}>
                       None
                     </label>
                   </div>
@@ -134,8 +121,7 @@ UI for configuring event settings.
                   Show Unpicked Teams On Overlay
                 </label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="selectionShowUnpickedTeams"
-                    name="selectionShowUnpickedTeams" {{if .SelectionShowUnpickedTeams}} checked{{end}}>
+                  <input type="checkbox" id="selectionShowUnpickedTeams" name="selectionShowUnpickedTeams" {{if .SelectionShowUnpickedTeams}} checked{{end}}>
                 </div>
               </div>
             </fieldset>
@@ -146,8 +132,7 @@ UI for configuring event settings.
                   Enable Team Info Download (From The Blue Alliance)
                 </label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="tbaDownloadEnabled"
-                    name="tbaDownloadEnabled" {{if .TbaDownloadEnabled}} checked{{end}}>
+                  <input type="checkbox" id="tbaDownloadEnabled" name="tbaDownloadEnabled" {{if .TbaDownloadEnabled}} checked{{end}}>
                 </div>
               </div>
             </fieldset>
@@ -177,8 +162,7 @@ UI for configuring event settings.
                 </button>
               </div>
               <div class="mt-2">
-                <button type="button" class="btn btn-danger"
-                  onclick="$('#confirmClearDataQualification').modal('show');">
+                <button type="button" class="btn btn-danger" onclick="$('#confirmClearDataQualification').modal('show');">
                   Clear Qualification Data
                 </button>
               </div>
@@ -193,49 +177,45 @@ UI for configuring event settings.
             <fieldset class="mb-4">
               <legend>Game-Specific</legend>
               <div class="row mb-3">
-                <label class="col-lg-6 control-label">Autonomous Period Duration<br/>(seconds)</label>
+                <label class="col-lg-6 control-label">Autonomous Period Duration<br />(seconds)</label>
                 <div class="col-lg-6">
                   <input type="text" class="form-control" name="autoDurationSec" value="{{.AutoDurationSec}}">
                 </div>
               </div>
               <div class="row mb-3">
-                <label class="col-lg-6 control-label">Pause Duration<br/>(seconds)</label>
+                <label class="col-lg-6 control-label">Pause Duration<br />(seconds)</label>
                 <div class="col-lg-6">
                   <input type="text" class="form-control" name="pauseDurationSec" value="{{.PauseDurationSec}}">
                 </div>
               </div>
               <div class="row mb-3">
-                <label class="col-lg-6 control-label">Teleoperated Period Duration<br/>(seconds)</label>
+                <label class="col-lg-6 control-label">Teleoperated Period Duration<br />(seconds)</label>
                 <div class="col-lg-6">
                   <input type="text" class="form-control" name="teleopDurationSec" value="{{.TeleopDurationSec}}">
                 </div>
               </div>
               <div class="row mb-3">
-                <label class="col-lg-6 control-label">Warning Remaining Duration<br/>(seconds)</label>
+                <label class="col-lg-6 control-label">Warning Remaining Duration<br />(seconds)</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="warningRemainingDurationSec"
-                    value="{{.WarningRemainingDurationSec}}">
+                  <input type="text" class="form-control" name="warningRemainingDurationSec" value="{{.WarningRemainingDurationSec}}">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Fuel Energized Threshold</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" id="fuelEnergizedThreshold"
-                    name="fuelEnergizedThreshold" value="{{.FuelEnergizedThreshold}}">
+                  <input type="text" class="form-control" id="fuelEnergizedThreshold" name="fuelEnergizedThreshold" value="{{.FuelEnergizedThreshold}}">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Fuel Supercharged Threshold</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" id="fuelSuperchargedThreshold" name="fuelSuperchargedThreshold"
-                    value="{{.FuelSuperchargedThreshold}}">
+                  <input type="text" class="form-control" id="fuelSuperchargedThreshold" name="fuelSuperchargedThreshold" value="{{.FuelSuperchargedThreshold}}">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Tower Traversal Threshold</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" id="towerTraversalThreshold"
-                    name="towerTraversalThreshold" value="{{.TowerTraversalThreshold}}">
+                  <input type="text" class="form-control" id="towerTraversalThreshold" name="towerTraversalThreshold" value="{{.TowerTraversalThreshold}}">
                 </div>
               </div>
             </fieldset>
@@ -247,11 +227,9 @@ UI for configuring event settings.
                 switch
                 available, for isolating each team to its own SSID and VLAN.</p>
               <div class="row mb-3">
-                <label class="col-lg-8 control-label"
-                  for="networkSecurityEnabled">Enable advanced network security</label>
+                <label class="col-lg-8 control-label" for="networkSecurityEnabled">Enable advanced network security</label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="networkSecurityEnabled"
-                    name="networkSecurityEnabled" {{if .NetworkSecurityEnabled}} checked{{end}}>
+                  <input type="checkbox" id="networkSecurityEnabled" name="networkSecurityEnabled" {{if .NetworkSecurityEnabled}} checked{{end}}>
                 </div>
               </div>
               <div class="row mb-3">
@@ -271,8 +249,7 @@ UI for configuring event settings.
                 <div class="col-lg-6">
                   <select class="form-select" name="apChannel" value="{{.ApChannel}}">
                     {{range $i, $j := seq 29}}
-                    <option value="{{(add 5 (multiply $i 8))}}"
-                      {{if eq $.ApChannel (add 5 (multiply $i 8))}} selected{{end}}>
+                    <option value="{{(add 5 (multiply $i 8))}}" {{if eq $.ApChannel (add 5 (multiply $i 8))}} selected{{end}}>
                       {{(add 5 (multiply $i 8))}}
                     </option>
                     {{end}}
@@ -323,8 +300,8 @@ UI for configuring event settings.
                 <label class="col-lg-6 control-label">Switch Type</label>
                 <div class="col-lg-6">
                   <select class="form-select" name="switchType" onchange="toggleSwitchRpcUrl(this.value);">
-                    <option value="switch" {{if eq .SwitchType "switch"}}selected{{end}}>Cisco 3500-series</option>
-                    <option value="wrtswitch" {{if eq .SwitchType "wrtswitch"}}selected{{end}}>OpenWrt (WrtSwitch)</option>
+                    <option value="switch" {{if eq .SwitchType "switch" }}selected{{end}}>Cisco 3500-series</option>
+                    <option value="wrtswitch" {{if eq .SwitchType "wrtswitch" }}selected{{end}}>OpenWrt (WrtSwitch)</option>
                   </select>
                 </div>
               </div>
@@ -334,7 +311,7 @@ UI for configuring event settings.
                   <input type="text" class="form-control" name="switchAddress" value="{{.SwitchAddress}}" placeholder="10.0.100.3">
                 </div>
               </div>
-              <div class="row mb-3" id="switchRpcUrlGroup" {{if ne .SwitchType "wrtswitch"}}style="display: none;"{{end}}>
+              <div class="row mb-3" id="switchRpcUrlGroup" {{if ne .SwitchType "wrtswitch" }}style="display: none;" {{end}}>
                 <label class="col-lg-6 control-label">Switch RPC URL</label>
                 <div class="col-lg-6">
                   <input type="text" class="form-control" name="switchRpcUrl" value="{{.SwitchRpcUrl}}" placeholder="/cgi-bin/luci/rpc">
@@ -353,11 +330,9 @@ UI for configuring event settings.
                 to disable team ethernet ports while network reconfiguration is in progress. This setting only works
                 if advanced network security is enabled above.</p>
               <div class="row mb-3">
-                <label class="col-lg-8 control-label"
-                  for="sccManagementEnabled">Enable SCC switch management</label>
+                <label class="col-lg-8 control-label" for="sccManagementEnabled">Enable SCC switch management</label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="sccManagementEnabled"
-                    name="sccManagementEnabled" {{if .SCCManagementEnabled}} checked{{end}}>
+                  <input type="checkbox" id="sccManagementEnabled" name="sccManagementEnabled" {{if .SCCManagementEnabled}} checked{{end}}>
                 </div>
               </div>
               <div class="row mb-3">
@@ -416,57 +391,49 @@ UI for configuring event settings.
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Red 1 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignRed1Id"
-                    value="{{if gt .TeamSignRed1Id 0}}{{.TeamSignRed1Id}}{{end}}" placeholder="51">
+                  <input type="text" class="form-control" name="teamSignRed1Id" value="{{if gt .TeamSignRed1Id 0}}{{.TeamSignRed1Id}}{{end}}" placeholder="51">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Red 2 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignRed2Id"
-                    value="{{if gt .TeamSignRed2Id 0}}{{.TeamSignRed2Id}}{{end}}" placeholder="52">
+                  <input type="text" class="form-control" name="teamSignRed2Id" value="{{if gt .TeamSignRed2Id 0}}{{.TeamSignRed2Id}}{{end}}" placeholder="52">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Red 3 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignRed3Id"
-                    value="{{if gt .TeamSignRed3Id 0}}{{.TeamSignRed3Id}}{{end}}" placeholder="53">
+                  <input type="text" class="form-control" name="teamSignRed3Id" value="{{if gt .TeamSignRed3Id 0}}{{.TeamSignRed3Id}}{{end}}" placeholder="53">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Red Timer Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignRedTimerId"
-                    value="{{if gt .TeamSignRedTimerId 0}}{{.TeamSignRedTimerId}}{{end}}" placeholder="50">
+                  <input type="text" class="form-control" name="teamSignRedTimerId" value="{{if gt .TeamSignRedTimerId 0}}{{.TeamSignRedTimerId}}{{end}}" placeholder="50">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Blue 1 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignBlue1Id"
-                    value="{{if gt .TeamSignBlue1Id 0}}{{.TeamSignBlue1Id}}{{end}}" placeholder="55">
+                  <input type="text" class="form-control" name="teamSignBlue1Id" value="{{if gt .TeamSignBlue1Id 0}}{{.TeamSignBlue1Id}}{{end}}" placeholder="55">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Blue 2 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignBlue2Id"
-                    value="{{if gt .TeamSignBlue2Id 0}}{{.TeamSignBlue2Id}}{{end}}" placeholder="56">
+                  <input type="text" class="form-control" name="teamSignBlue2Id" value="{{if gt .TeamSignBlue2Id 0}}{{.TeamSignBlue2Id}}{{end}}" placeholder="56">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Blue 3 Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignBlue3Id"
-                    value="{{if gt .TeamSignBlue3Id 0}}{{.TeamSignBlue3Id}}{{end}}" placeholder="57">
+                  <input type="text" class="form-control" name="teamSignBlue3Id" value="{{if gt .TeamSignBlue3Id 0}}{{.TeamSignBlue3Id}}{{end}}" placeholder="57">
                 </div>
               </div>
               <div class="row mb-3">
                 <label class="col-lg-6 control-label">Blue Timer Sign ID</label>
                 <div class="col-lg-6">
-                  <input type="text" class="form-control" name="teamSignBlueTimerId"
-                    value="{{if gt .TeamSignBlueTimerId 0}}{{.TeamSignBlueTimerId}}{{end}}" placeholder="54">
+                  <input type="text" class="form-control" name="teamSignBlueTimerId" value="{{if gt .TeamSignBlueTimerId 0}}{{.TeamSignBlueTimerId}}{{end}}" placeholder="54">
                 </div>
               </div>
               <div class="row mb-3">
@@ -476,8 +443,7 @@ UI for configuring event settings.
                   disablement. Consider enabling this setting when physical E-Stop buttons are not present.</p>
                 <label class="col-lg-8 control-label" for="useLiteUdpPort"> Lite Mode </label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="useLiteUdpPort" name="useLiteUdpPort"
-                    {{if .UseLiteUdpPort}} checked{{end}}>
+                  <input type="checkbox" id="useLiteUdpPort" name="useLiteUdpPort" {{if .UseLiteUdpPort}} checked{{end}}>
                 </div>
               </div>
             </fieldset>
@@ -487,11 +453,9 @@ UI for configuring event settings.
               <legend>Publishing</legend>
               <p>Contact The Blue Alliance to obtain an event code and credentials.</p>
               <div class="row mb-3">
-                <label class="col-lg-8 control-label"
-                  for="tbaPublishingEnabled">Enable The Blue Alliance publishing</label>
+                <label class="col-lg-8 control-label" for="tbaPublishingEnabled">Enable The Blue Alliance publishing</label>
                 <div class="col-lg-1 checkbox">
-                  <input type="checkbox" id="tbaPublishingEnabled"
-                    name="tbaPublishingEnabled" {{if .TbaPublishingEnabled}} checked{{end}}>
+                  <input type="checkbox" id="tbaPublishingEnabled" name="tbaPublishingEnabled" {{if .TbaPublishingEnabled}} checked{{end}}>
                 </div>
               </div>
               <div class="row mb-3">
@@ -520,7 +484,8 @@ UI for configuring event settings.
                 <a href="/setup/settings/publish_teams" class="btn btn-primary">Publish Teams</a>
               </div>
               <div class="mt-2">
-                <a href="/setup/settings/publish_matches" class="btn btn-primary">Publish Schedule/Results</a></div>
+                <a href="/setup/settings/publish_matches" class="btn btn-primary">Publish Schedule/Results</a>
+              </div>
               <div class="mt-2">
                 <a href="/setup/settings/publish_rankings" class="btn btn-primary">Publish Standings</a>
               </div>
@@ -590,7 +555,7 @@ UI for configuring event settings.
 
               <h5>Event Button Mappings</h5>
               <p class="text-muted">Configure page/row/column coordinates for each event. <strong>Set Page to 0 to disable a specific event trigger.</strong>
-              Note: Companion uses 0 as a valid row/column number, so only the Page field is used to enable/disable events.</p>
+                Note: Companion uses 0 as a valid row/column number, so only the Page field is used to enable/disable events.</p>
 
               <div class="row mb-2">
                 <div class="col-lg-3"><strong>Event</strong></div>
@@ -811,14 +776,6 @@ UI for configuring event settings.
 {{end}}
 {{define "script"}}
 <script>
-  updateNumPlayoffAlliances = function (isDoubleElimination) {
-    const numPlayoffAlliances = $("input[name=numPlayoffAlliances]");
-    numPlayoffAlliances.prop("disabled", isDoubleElimination);
-    if (isDoubleElimination) {
-      numPlayoffAlliances.val(8);
-    }
-  };
-
   toggleSwitchRpcUrl = function (switchType) {
     if (switchType === "wrtswitch") {
       $("#switchRpcUrlGroup").show();

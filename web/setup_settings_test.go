@@ -5,15 +5,16 @@ package web
 
 import (
 	"bytes"
-	"github.com/Team254/cheesy-arena/game"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/Team254/cheesy-arena/tournament"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/tournament"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSetupSettings(t *testing.T) {
@@ -29,7 +30,7 @@ func TestSetupSettings(t *testing.T) {
 	// Change the settings and check the response.
 	recorder = web.postHttpResponse(
 		"/setup/settings",
-		"name=Chezy Champs&code=CC&playoffType=single&numPlayoffAlliances=16&tbaPublishingEnabled=on&"+
+		"name=Chezy Champs&code=CC&playoffType=SingleEliminationPlayoff&numPlayoffAlliances=16&tbaPublishingEnabled=on&"+
 			"tbaEventCode=2014cc&tbaSecretId=secretId&tbaSecret=tbasec",
 	)
 	assert.Equal(t, 303, recorder.Code)
@@ -48,7 +49,7 @@ func TestSetupSettingsDoubleElimination(t *testing.T) {
 	recorder := web.postHttpResponse("/setup/settings", "playoffType=DoubleEliminationPlayoff&numPlayoffAlliances=3")
 	assert.Equal(t, 303, recorder.Code)
 	assert.Equal(t, model.DoubleEliminationPlayoff, web.arena.EventSettings.PlayoffType)
-	assert.Equal(t, 8, web.arena.EventSettings.NumPlayoffAlliances)
+	assert.Equal(t, 3, web.arena.EventSettings.NumPlayoffAlliances)
 }
 
 func TestSetupSettingsInvalidValues(t *testing.T) {
@@ -57,16 +58,19 @@ func TestSetupSettingsInvalidValues(t *testing.T) {
 	assert.Equal(t, 303, recorder.Code)
 
 	// Invalid number of alliances.
-	recorder = web.postHttpResponse("/setup/settings", "playoffType=SingleEliminationPlayoff&numAlliances=1")
+	recorder = web.postHttpResponse("/setup/settings", "playoffType=SingleEliminationPlayoff&numPlayoffAlliances=1")
 	assert.Contains(t, recorder.Body.String(), "must be between 2 and 16")
+
+	recorder = web.postHttpResponse("/setup/settings", "playoffType=DoubleEliminationPlayoff&numPlayoffAlliances=9")
+	assert.Contains(t, recorder.Body.String(), "must be between 2 and 8")
 
 	// Changing the playoff type after alliance selection is finalized.
 	assert.Nil(t, web.arena.Database.CreateAlliance(&model.Alliance{Id: 1}))
-	recorder = web.postHttpResponse("/setup/settings", "playoffType=DoubleEliminationPlayoff")
+	recorder = web.postHttpResponse("/setup/settings", "playoffType=DoubleEliminationPlayoff&numPlayoffAlliances=8")
 	assert.Contains(t, recorder.Body.String(), "Cannot change playoff type or size after alliance selection")
 
 	// Changing the playoff size after alliance selection is finalized.
-	recorder = web.postHttpResponse("/setup/settings", "numPlayoffAlliances=2")
+	recorder = web.postHttpResponse("/setup/settings", "playoffType=SingleEliminationPlayoff&numPlayoffAlliances=2")
 	assert.Contains(t, recorder.Body.String(), "Cannot change playoff type or size after alliance selection")
 }
 

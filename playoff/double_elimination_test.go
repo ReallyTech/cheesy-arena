@@ -4,10 +4,11 @@
 package playoff
 
 import (
+	"testing"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestDoubleEliminationInitial(t *testing.T) {
@@ -66,15 +67,75 @@ func TestDoubleEliminationInitial(t *testing.T) {
 	)
 }
 
+func TestDoubleEliminationInitialWith6Alliances(t *testing.T) {
+	finalMatchup, _, err := newDoubleEliminationBracket(6)
+	assert.Nil(t, err)
+
+	matchSpecs, err := collectMatchSpecs(finalMatchup)
+	assert.Nil(t, err)
+	assert.Equal(t, 15, len(matchSpecs))
+
+	// With 6 alliances, matches 1 and 3 are byes, so they are pruned.
+	// But wait, M5 and M6 also become byes because one side is a selection source with ID > 6?
+	// Let's check:
+	// M1: 1 vs 8. W1=A1, L1=A8.
+	// M3: 2 vs 7. W3=A2, L3=A7.
+	// M7: W1 vs W2. W1 is pruned to A1. So M7 red source is A1.
+	// M5: L1 vs L2. L1 is pruned to A8. So M5 red source is A8.
+	// Since A8 > 6, M5 itself is pruned! W5=L2, L5=A8.
+	// Similarly for M6: L3 is A7, so M6 is pruned. W6=L4, L6=A7.
+	// Match 9: L7 vs W6. W6 is pruned to L4.
+	// Match 10: L8 vs W5. W5 is pruned to L2.
+	// Match groups collected should be: M2, M4, M7, M8, M9, M10, M11, M12, M13, F. (Missing: M1, M3, M5, M6)
+
+	matchGroups, err := collectMatchGroups(finalMatchup)
+	assert.Nil(t, err)
+	assertMatchGroups(
+		t, matchGroups, "M2", "M4", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "F",
+	)
+
+	// Check alliances for initial matches.
+	// M2: 4 vs 5.
+	// M4: 3 vs 6.
+	// M7 red source is A1 (from pruned M1).
+	// M7 blue source is W2 (from M2).
+	// So initially M7 should be {1, 0}.
+	assert.Equal(t, 10, len(matchGroups))
+	finalMatchup.update(map[int]playoffMatchResult{})
+	assert.Equal(t, 1, matchGroups["M7"].(*Matchup).RedAllianceId)
+	assert.Equal(t, 0, matchGroups["M7"].(*Matchup).BlueAllianceId)
+}
+
+func TestDoubleEliminationInitialWith2Alliances(t *testing.T) {
+	finalMatchup, _, err := newDoubleEliminationBracket(2)
+	assert.Nil(t, err)
+
+	matchSpecs, err := collectMatchSpecs(finalMatchup)
+	assert.Nil(t, err)
+
+	// With 2 alliances, only M11 and F remain. (M1-M10, M12, M13 are pruned)
+	// Match groups collected: M11, F.
+	// Total matches: 1 (M11) + 6 (F) = 7.
+	assert.Equal(t, 7, len(matchSpecs))
+
+	matchGroups, err := collectMatchGroups(finalMatchup)
+	assert.Nil(t, err)
+	assertMatchGroups(t, matchGroups, "M11", "F")
+
+	finalMatchup.update(map[int]playoffMatchResult{})
+	assert.Equal(t, 1, matchGroups["M11"].(*Matchup).RedAllianceId)
+	assert.Equal(t, 2, matchGroups["M11"].(*Matchup).BlueAllianceId)
+}
+
 func TestDoubleEliminationErrors(t *testing.T) {
-	_, _, err := newDoubleEliminationBracket(7)
+	_, _, err := newDoubleEliminationBracket(1)
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "double-elimination bracket must have exactly 8 alliances", err.Error())
+		assert.Equal(t, "double-elimination bracket must have between 2 and 8 alliances", err.Error())
 	}
 
 	_, _, err = newDoubleEliminationBracket(9)
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "double-elimination bracket must have exactly 8 alliances", err.Error())
+		assert.Equal(t, "double-elimination bracket must have between 2 and 8 alliances", err.Error())
 	}
 }
 

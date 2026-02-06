@@ -7,14 +7,15 @@ package playoff
 
 import (
 	"fmt"
+
 	"github.com/Team254/cheesy-arena/model"
 )
 
 // Creates a double-elimination bracket and returns the root matchup comprising the tournament finals along with
-// scheduled breaks. Only supports having exactly eight alliances.
+// scheduled breaks. Supports between 2 and 8 alliances.
 func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error) {
-	if numAlliances != 8 {
-		return nil, nil, fmt.Errorf("double-elimination bracket must have exactly 8 alliances")
+	if numAlliances < 2 || numAlliances > 8 {
+		return nil, nil, fmt.Errorf("double-elimination bracket must have between 2 and 8 alliances")
 	}
 
 	// Define Round 1 matches.
@@ -51,29 +52,29 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	m5 := Matchup{
 		id:                 "M5",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m1, useWinner: false},
-		blueAllianceSource: matchupSource{matchup: &m2, useWinner: false},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m1, false, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m2, false, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(5, "Round 2 Lower", 540),
 	}
 	m6 := Matchup{
 		id:                 "M6",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m3, useWinner: false},
-		blueAllianceSource: matchupSource{matchup: &m4, useWinner: false},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m3, false, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m4, false, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(6, "Round 2 Lower", 540),
 	}
 	m7 := Matchup{
 		id:                 "M7",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m1, useWinner: true},
-		blueAllianceSource: matchupSource{matchup: &m2, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m1, true, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m2, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(7, "Round 2 Upper", 540),
 	}
 	m8 := Matchup{
 		id:                 "M8",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m3, useWinner: true},
-		blueAllianceSource: matchupSource{matchup: &m4, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m3, true, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m4, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(8, "Round 2 Upper", 300),
 	}
 
@@ -81,15 +82,15 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	m9 := Matchup{
 		id:                 "M9",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m7, useWinner: false},
-		blueAllianceSource: matchupSource{matchup: &m6, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m7, false, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m6, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(9, "Round 3 Lower", 540),
 	}
 	m10 := Matchup{
 		id:                 "M10",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m8, useWinner: false},
-		blueAllianceSource: matchupSource{matchup: &m5, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m8, false, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m5, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(10, "Round 3 Lower", 300),
 	}
 
@@ -97,15 +98,15 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	m11 := Matchup{
 		id:                 "M11",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m7, useWinner: true},
-		blueAllianceSource: matchupSource{matchup: &m8, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m7, true, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m8, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(11, "Round 4 Upper", 540),
 	}
 	m12 := Matchup{
 		id:                 "M12",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m10, useWinner: true},
-		blueAllianceSource: matchupSource{matchup: &m9, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m10, true, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m9, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(12, "Round 4 Lower", 300),
 	}
 
@@ -113,8 +114,8 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	m13 := Matchup{
 		id:                 "M13",
 		NumWinsToAdvance:   1,
-		redAllianceSource:  matchupSource{matchup: &m11, useWinner: false},
-		blueAllianceSource: matchupSource{matchup: &m12, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m11, false, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m12, true, numAlliances),
 		matchSpecs:         newDoubleEliminationMatch(13, "Round 5 Lower", 300),
 	}
 
@@ -122,8 +123,8 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	final := Matchup{
 		id:                 "F",
 		NumWinsToAdvance:   2,
-		redAllianceSource:  matchupSource{matchup: &m11, useWinner: true},
-		blueAllianceSource: matchupSource{matchup: &m13, useWinner: true},
+		redAllianceSource:  newDoubleEliminationAllianceSource(&m11, true, numAlliances),
+		blueAllianceSource: newDoubleEliminationAllianceSource(&m13, true, numAlliances),
 		matchSpecs:         newFinalMatches(14),
 	}
 
@@ -138,6 +139,27 @@ func newDoubleEliminationBracket(numAlliances int) (*Matchup, []breakSpec, error
 	}
 
 	return &final, breakSpecs, nil
+}
+
+// Helper method to create an allianceSource while pruning any unnecessary matchups due to the number of alliances.
+func newDoubleEliminationAllianceSource(previousMatchup *Matchup, useWinner bool, numAlliances int) allianceSource {
+	redId := previousMatchup.redAllianceSource.AllianceId()
+	blueId := previousMatchup.blueAllianceSource.AllianceId()
+
+	if blueId > numAlliances && (redId <= numAlliances || redId > blueId) {
+		if useWinner {
+			return previousMatchup.redAllianceSource
+		}
+		return previousMatchup.blueAllianceSource
+	}
+	if redId > numAlliances && (blueId <= numAlliances || blueId > redId) {
+		if useWinner {
+			return previousMatchup.blueAllianceSource
+		}
+		return previousMatchup.redAllianceSource
+	}
+
+	return matchupSource{matchup: previousMatchup, useWinner: useWinner}
 }
 
 // Helper method to create the matches for a given pre-final double-elimination matchup.

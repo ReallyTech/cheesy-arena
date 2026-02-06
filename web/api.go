@@ -8,15 +8,16 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/partner"
 	"github.com/Team254/cheesy-arena/playoff"
 	"github.com/Team254/cheesy-arena/websocket"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
 )
 
 type MatchResultWithSummary struct {
@@ -311,8 +312,9 @@ func (web *Web) generateBracketSvg(w io.Writer, activeMatch *model.Match) error 
 		return err
 	}
 	data := struct {
-		BracketType string
-		Matchups    map[string]*allianceMatchup
-	}{bracketType, matchups}
+		BracketType  string
+		NumAlliances int
+		Matchups     map[string]*allianceMatchup
+	}{bracketType, numAlliances, matchups}
 	return template.ExecuteTemplate(w, "bracket", data)
 }

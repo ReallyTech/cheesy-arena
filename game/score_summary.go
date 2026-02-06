@@ -11,6 +11,7 @@ type ScoreSummary struct {
 	AutoPoints                   int
 	AutoFuelPoints               int
 	AutoTowerPoints              int
+	TeleopTowerPoints            int
 	MatchPoints                  int
 	FoulPoints                   int
 	Score                        int

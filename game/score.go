@@ -48,6 +48,7 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 	summary.AutoTowerPoints = autoClimbCount * 15
 	summary.AutoPoints = summary.AutoFuelPoints + summary.AutoTowerPoints
 	summary.TowerPoints = summary.AutoTowerPoints
+	summary.TeleopTowerPoints = 0
 	summary.TotalTowers = 0
 
 	for _, level := range score.TowerLevels {
@@ -56,14 +57,15 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 		}
 		switch level {
 		case 1:
-			summary.TowerPoints += 10
+			summary.TeleopTowerPoints += 10
 		case 2:
-			summary.TowerPoints += 20
+			summary.TeleopTowerPoints += 20
 		case 3:
-			summary.TowerPoints += 30
+			summary.TeleopTowerPoints += 30
 		}
 	}
 
+	summary.TowerPoints += summary.TeleopTowerPoints
 	summary.MatchPoints = summary.FuelPoints + summary.TowerPoints
 
 	// Calculate penalty points.

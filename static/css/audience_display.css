@@ -146,22 +146,24 @@ html {
   opacity: 0;
 }
 
-.score-right .score-fields {
-  align-items: flex-end;
-}
-
 .score-fields {
   height: 100%;
   width: 0;
   display: none;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-evenly;
+  align-items: center;
   opacity: 0;
+}
+
+.score-right .score-fields {
+  flex-direction: row-reverse;
 }
 
 .score-field {
   display: flex;
   flex-direction: row;
+  align-items: center;
   transition: opacity 0.5s;
 }
 
@@ -169,23 +171,21 @@ html {
   opacity: 0.15;
 }
 
-.coral-icon {
-  width: 35px;
-  margin: 0 12px;
-}
-
-.algae-icon {
-  width: 31px;
-  margin: 0 14px;
+.fuel-icon,
+.tower-icon {
+  width: 30px;
+  margin: 0 4px;
+  filter: brightness(0) invert(1);
 }
 
 .score-field>div {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 70px;
+  min-width: 40px;
+  padding: 0 4px;
   font-family: "FuturaLTBold";
-  font-size: 27px;
+  font-size: 24px;
   line-height: 27px;
   color: #fff;
 }

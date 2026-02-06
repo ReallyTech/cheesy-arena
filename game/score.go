@@ -43,6 +43,7 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 	if autoClimbCount > 2 {
 		autoClimbCount = 2
 	}
+	summary.TowerAutoCount = autoClimbCount
 	summary.AutoFuelPoints = score.FuelAuto
 	summary.AutoTowerPoints = autoClimbCount * 15
 	summary.AutoPoints = summary.AutoFuelPoints + summary.AutoTowerPoints
@@ -73,6 +74,12 @@ func (score *Score) Summarize(opponentScore *Score, isRed bool, matchId int) *Sc
 	summary.Score = summary.MatchPoints + summary.FoulPoints
 
 	// Ranking Points
+	if summary.TotalFuel < FuelEnergizedThreshold {
+		summary.FuelNextRPThreshold = FuelEnergizedThreshold
+	} else {
+		summary.FuelNextRPThreshold = FuelSuperchargedThreshold
+	}
+
 	if summary.TotalFuel >= FuelEnergizedThreshold {
 		summary.FuelEnergizedRankingPoint = true
 		summary.BonusRankingPoints++

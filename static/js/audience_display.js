@@ -29,9 +29,9 @@ const eventMatchInfoUp = $("#eventMatchInfo").css("height");
 const logoUp = "20px";
 const logoDown = $("#logo").css("top");
 const scoreIn = $(".score").css("width");
-const scoreMid = "185px";
-const scoreOut = "370px";
-const scoreFieldsOut = "150px";
+const scoreMid = "200px";
+const scoreOut = "420px";
+const scoreFieldsOut = "220px";
 const scoreLogoTop = "-530px";
 const bracketLogoTop = "-780px";
 const bracketLogoScale = 0.75;
@@ -147,14 +147,19 @@ const handleRealtimeScore = function (data) {
   $(`#${redSide}ScoreNumber`).text(data.Red.ScoreSummary.Score);
   $(`#${blueSide}ScoreNumber`).text(data.Blue.ScoreSummary.Score);
 
-  $(`#${redSide}Fuel`).text(data.Red.ScoreSummary.TotalFuel);
-  $(`#${redSide}Tower`).text(data.Red.ScoreSummary.TotalTowers);
-  $(`#${blueSide}Fuel`).text(data.Blue.ScoreSummary.TotalFuel);
-  $(`#${blueSide}Tower`).text(data.Blue.ScoreSummary.TotalTowers);
+  $(`#${redSide}Fuel`).text(data.Red.ScoreSummary.TotalFuel + "/" + data.Red.ScoreSummary.FuelNextRPThreshold);
+  $(`#${redSide}Tower`).text(data.Red.ScoreSummary.TowerAutoCount);
+  $(`#${blueSide}Fuel`).text(data.Blue.ScoreSummary.TotalFuel + "/" + data.Blue.ScoreSummary.FuelNextRPThreshold);
+  $(`#${blueSide}Tower`).text(data.Blue.ScoreSummary.TowerAutoCount);
 
   // Update Hub active indicators.
-  $(`#${redSide}Fuel`).parent().attr("data-active", data.Red.HubActive);
-  $(`#${blueSide}Fuel`).parent().attr("data-active", data.Blue.HubActive);
+  const redFuelParent = $(`#${redSide}Fuel`).parent();
+  redFuelParent.attr("data-active", data.Red.HubActive);
+  redFuelParent.find(".fuel-icon").attr("src", data.Red.HubActive ? "/static/img/battery-charging.svg" : "/static/img/battery.svg");
+
+  const blueFuelParent = $(`#${blueSide}Fuel`).parent();
+  blueFuelParent.attr("data-active", data.Blue.HubActive);
+  blueFuelParent.find(".fuel-icon").attr("src", data.Blue.HubActive ? "/static/img/battery-charging.svg" : "/static/img/battery.svg");
 };
 
 // Handles a websocket message to populate the final score data.

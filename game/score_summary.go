@@ -20,6 +20,8 @@ type ScoreSummary struct {
 	BonusRankingPoints           int
 	TotalFuel                    int
 	TotalTowers                  int
+	TowerAutoCount               int
+	FuelNextRPThreshold          int
 }
 
 type MatchStatus int

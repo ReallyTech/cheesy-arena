@@ -80,6 +80,7 @@ type Arena struct {
 	lastRedFuelCount                  int
 	lastBlueFuelCount                 int
 	hubTieBreakerRedStarts            bool
+	matchGameData                     string
 	lastDsPacketTime                  time.Time
 	lastPeriodicTaskTime              time.Time
 	EventStatus                       EventStatus
@@ -710,6 +711,7 @@ func (arena *Arena) Update() {
 		arena.lastRedFuelCount = 0
 		arena.lastBlueFuelCount = 0
 		arena.hubTieBreakerRedStarts = rand.Intn(2) == 0
+		arena.matchGameData = ""
 		arena.FieldVolunteers = false
 		arena.FieldReset = false
 	case WarmupPeriod:
@@ -727,6 +729,26 @@ func (arena *Arena) Update() {
 		if matchTimeSec >= game.GetDurationToAutoEnd().Seconds() {
 			auto = false
 			sendDsPacket = true
+
+			// Determine which alliance starts the swapping period with an active hub.
+			if arena.matchGameData == "" {
+				redAutoFuel := arena.RedRealtimeScore.CurrentScore.FuelAuto
+				blueAutoFuel := arena.BlueRealtimeScore.CurrentScore.FuelAuto
+				var redStarts bool
+				if redAutoFuel < blueAutoFuel {
+					redStarts = true
+				} else if blueAutoFuel < redAutoFuel {
+					redStarts = false
+				} else {
+					redStarts = arena.hubTieBreakerRedStarts
+				}
+				if redStarts {
+					arena.sendGameData("R")
+				} else {
+					arena.sendGameData("B")
+				}
+			}
+
 			if game.MatchTiming.PauseDurationSec > 0 {
 				arena.MatchState = PausePeriod
 				enabled = false
@@ -1105,6 +1127,19 @@ func (arena *Arena) sendDsPacket(auto bool, enabled bool) {
 		}
 	}
 	arena.lastDsPacketTime = time.Now()
+}
+
+func (arena *Arena) sendGameData(gameData string) {
+	arena.matchGameData = gameData
+	for _, allianceStation := range arena.AllianceStations {
+		dsConn := allianceStation.DsConn
+		if dsConn != nil {
+			err := dsConn.sendGameDataPacket(gameData)
+			if err != nil {
+				log.Printf("Failed to send game data to team %d: %v", allianceStation.Team.Id, err)
+			}
+		}
+	}
 }
 
 // Returns the alliance station identifier for the given team, or the empty string if the team is not present

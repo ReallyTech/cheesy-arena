@@ -385,6 +385,10 @@ func (arena *Arena) listenForDriverStations() {
 			dsConn.WrongStation = wrongAssignedStation
 		}
 
+		if arena.matchGameData != "" {
+			dsConn.sendGameDataPacket(arena.matchGameData)
+		}
+
 		// Spin up a goroutine to handle further TCP communication with this driver station.
 		go dsConn.handleTcpConnection(arena)
 	}

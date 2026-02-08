@@ -49,6 +49,7 @@ type TeamSign struct {
 
 const (
 	teamSignAddressPrefix            = "10.0.100."
+	teamSignYear                     = 2026
 	teamSignPort                     = 10011
 	teamSignPacketMagicString        = "CYPRX"
 	teamSignPacketHeaderLength       = 7
@@ -251,7 +252,7 @@ func generateTimerTexts(arena *Arena, countdown, inMatchRearText string) (string
 	var frontColor color.RGBA
 	rearText := inMatchRearText
 	if arena.AllianceStationDisplayMode == "logo" {
-		frontText = fmt.Sprintf("%5d", time.Now().Year())
+		frontText = fmt.Sprintf("%5d", teamSignYear)
 		frontColor = whiteColor
 	} else if arena.AllianceStationDisplayMode == "timeout" {
 		frontText = countdown
@@ -288,7 +289,7 @@ func (sign *TeamSign) generateTeamNumberTexts(
 	var frontText string
 	var frontColor color.RGBA
 	if arena.AllianceStationDisplayMode == "logo" {
-		frontText = fmt.Sprintf("%5d", time.Now().Year())
+		frontText = fmt.Sprintf("%5d", teamSignYear)
 		frontColor = allianceColor
 	} else {
 		if allianceStation.Team == nil {

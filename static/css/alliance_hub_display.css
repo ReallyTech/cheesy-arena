@@ -52,6 +52,14 @@ body[data-alliance="blue"] #hub-container[data-hub-active="true"] {
     opacity: 1;
 }
 
+#match-info {
+    font-size: 8vw;
+    margin-top: -20px;
+    opacity: 1;
+    color: #ff0; /* Highlight with yellow always */
+    transition: all 0.5s ease;
+}
+
 #thresholds-bar {
     font-size: 5vw;
     margin-top: 20px;

@@ -18,6 +18,10 @@ Display shown to show the alliance hub status.
 <body>
     <div id="hub-container">
         <div id="hub-status-text">INACTIVE</div>
+        <div id="match-info">
+            <span id="match-state">PRE-MATCH</span>
+            <span id="match-time">0:00</span>
+        </div>
         <div id="thresholds-bar">
             Fuel: <span id="fuel-count">0</span> / <span id="fuel-threshold">0</span>
         </div>
@@ -26,6 +30,7 @@ Display shown to show the alliance hub status.
     <script src="/static/js/lib/jquery.json-2.4.min.js"></script>
     <script src="/static/js/lib/jquery.websocket-0.0.1.js"></script>
     <script src="/static/js/cheesy-websocket.js"></script>
+    <script src="/static/js/match_timing.js"></script>
     <script src="/static/js/alliance_hub_display.js"></script>
 </body>
 

@@ -641,8 +641,8 @@ func (arena *Arena) MatchTimeSec() float64 {
 }
 
 func (arena *Arena) isHubActive(alliance string, matchTime float64) bool {
-	// AUTO: Both active.
-	if matchTime < game.GetDurationToAutoEnd().Seconds() {
+	// AUTO, Pause, and first 10 seconds of Teleop: Both active.
+	if matchTime < game.GetDurationToTeleopStart().Seconds()+10 {
 		return true
 	}
 
@@ -651,9 +651,9 @@ func (arena *Arena) isHubActive(alliance string, matchTime float64) bool {
 		return true
 	}
 
-	// Swapping period: Teleop Start (usually Auto end) to 0:30 remaining.
-	if matchTime >= game.GetDurationToAutoEnd().Seconds() && matchTime < game.GetDurationToTeleopEnd().Seconds()-30 {
-		period := int((matchTime - game.GetDurationToAutoEnd().Seconds()) / 25)
+	// Swapping period: 10 seconds after Teleop Start to 0:30 remaining.
+	if matchTime >= game.GetDurationToTeleopStart().Seconds()+10 && matchTime < game.GetDurationToTeleopEnd().Seconds()-30 {
+		period := int((matchTime - (game.GetDurationToTeleopStart().Seconds() + 10)) / 25)
 
 		redAutoFuel := arena.RedRealtimeScore.CurrentScore.FuelAuto
 		blueAutoFuel := arena.BlueRealtimeScore.CurrentScore.FuelAuto

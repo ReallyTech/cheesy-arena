@@ -54,6 +54,8 @@ func (web *Web) allianceHubDisplayWebsocketHandler(w http.ResponseWriter, r *htt
 	ws.HandleNotifiers(
 		display.Notifier,
 		web.arena.RealtimeScoreNotifier,
+		web.arena.MatchTimeNotifier,
+		web.arena.MatchTimingNotifier,
 		web.arena.ReloadDisplaysNotifier,
 	)
 }

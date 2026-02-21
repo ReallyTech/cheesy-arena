@@ -13,6 +13,15 @@ $(document).ready(function () {
     $("body").attr("data-alliance", alliance.toLowerCase());
 
     var events = {
+        matchTime: function (event) {
+            translateMatchTime(event.data, function (matchState, matchStateText, countdownSec) {
+                $("#match-state").text(matchStateText);
+                $("#match-time").text(getCountdownString(countdownSec));
+            });
+        },
+        matchTiming: function (event) {
+            handleMatchTiming(event.data);
+        },
         realtimeScore: function (event) {
             var data = event.data;
             var allianceData = data[alliance];

@@ -91,7 +91,7 @@ func (ap *WrtAccessPoint) ConfigureTeamWifi(teams [6]*model.Team, channel int) e
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.network='vlan%d'; ", station, vlan))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.mode='ap'; ", station))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.encryption='psk2'; ", station))
-		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.ssid='%d'; ", station, team.Id))
+		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.ssid='%d-ds'; ", station, team.Id))
 		cmdBuffer.WriteString(fmt.Sprintf("uci set wireless.%s.key='%s'; ", station, team.WpaKey))
 	}
 

@@ -787,7 +787,7 @@ $(function () {
   }
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/displays/audience/websocket", {
+  websocket = new CheesyNats("/displays/audience/websocket", {
     allianceSelection: function (event) {
       handleAllianceSelection(event.data);
     },

@@ -66,9 +66,12 @@ func (notifier *Notifier) NotifyWithMessage(messageBody any) {
 	notifier.mutex.Lock()
 	defer notifier.mutex.Unlock()
 
-	// Broadcast to NATS
-	subject := "cheesy.updates." + notifier.messageType
+	// Broadcast to global NATS notify channel
+	subject := "arena.notify." + notifier.messageType
 	PublishMessage(subject, notifier.messageType, messageBody)
+
+	// Broadcast to specific clients interested in this notifier
+	NotifyClients(notifier.messageType, messageBody)
 
 	message := messageEnvelope{messageType: notifier.messageType, messageBody: messageBody}
 	for listener := range notifier.listeners {
@@ -111,5 +114,44 @@ func (notifier *Notifier) getMessageBody() any {
 		return nil
 	} else {
 		return notifier.messageProducer()
+	}
+}
+
+var (
+	clients      = make(map[string][]string) // clientId -> list of subscribed messageTypes
+	clientsMutex sync.Mutex
+)
+
+// RegisterClientSubscriptions updates the list of message types a client is interested in.
+func RegisterClientSubscriptions(clientId string, subscriptions []string) {
+	clientsMutex.Lock()
+	defer clientsMutex.Unlock()
+	clients[clientId] = subscriptions
+}
+
+// UnregisterClient removes a client from the subscription list.
+func UnregisterClient(clientId string) {
+	clientsMutex.Lock()
+	defer clientsMutex.Unlock()
+	delete(clients, clientId)
+}
+
+// NotifyClients sends a message to all clients subscribed to a specific message type.
+func NotifyClients(messageType string, messageBody any) {
+	clientsMutex.Lock()
+	targetClients := make([]string, 0)
+	for clientId, subs := range clients {
+		for _, sub := range subs {
+			if sub == messageType {
+				targetClients = append(targetClients, clientId)
+				break
+			}
+		}
+	}
+	clientsMutex.Unlock()
+
+	for _, clientId := range targetClients {
+		subject := "arena.clients." + clientId + "." + messageType
+		PublishMessage(subject, messageType, messageBody)
 	}
 }

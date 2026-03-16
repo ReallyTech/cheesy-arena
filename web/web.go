@@ -15,6 +15,7 @@ import (
 	"text/template"
 
 	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/websocket"
 
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/model"
@@ -91,10 +92,72 @@ func NewWeb(arena *field.Arena) *Web {
 func (web *Web) ServeWebInterface(port int) {
 	http.Handle("/static/", http.StripPrefix("/static/", addNoCacheHeader(http.FileServer(http.Dir("static/")))))
 	http.Handle("/", web.newHandler())
+
+	// Register NATS command handlers for each route
+	web.registerNatsHandlers()
+
 	log.Printf("Serving HTTP requests on port %d", port)
 
 	// Start Server
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+}
+
+func (web *Web) registerNatsHandlers() {
+	// Register NATS handlers for scoring panels
+	for _, position := range []string{"red_near", "red_far", "blue_near", "blue_far"} {
+		pos := position
+		path := fmt.Sprintf("/panels/scoring/%s/websocket", pos)
+		websocket.RegisterCommandHandler(path, func(command string, data interface{}, clientId string) bool {
+			err := web.handleScoringCommand(pos, command, data)
+			return err == nil
+		})
+	}
+
+	// Register NATS handlers for referee panel
+	websocket.RegisterCommandHandler("/panels/referee/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleRefereeCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for match play
+	websocket.RegisterCommandHandler("/match_play/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleMatchPlayCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for displays setup
+	websocket.RegisterCommandHandler("/setup/displays/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleDisplaysCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for field testing
+	websocket.RegisterCommandHandler("/setup/field_testing/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleFieldTestingCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for lower thirds setup
+	websocket.RegisterCommandHandler("/setup/lower_thirds/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleLowerThirdsCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for alliance selection
+	websocket.RegisterCommandHandler("/alliance_selection/websocket", func(command string, data interface{}, clientId string) bool {
+		err := web.handleAllianceSelectionCommand(command, data)
+		return err == nil
+	})
+
+	// Register NATS handlers for announcer display (no command logic expected, but for registration)
+	websocket.RegisterCommandHandler("/displays/announcer/websocket", func(command string, data interface{}, clientId string) bool {
+		return true
+	})
+
+	// Register NATS handlers for audience display (no command logic expected)
+	websocket.RegisterCommandHandler("/displays/audience/websocket", func(command string, data interface{}, clientId string) bool {
+		return true
+	})
 }
 
 // Serves the root page of Cheesy Arena.
@@ -130,12 +193,10 @@ func (web *Web) newHandler() http.Handler {
 	mux.HandleFunc("GET /", web.indexHandler)
 	mux.HandleFunc("GET /alliance_selection", web.allianceSelectionGetHandler)
 	mux.HandleFunc("POST /alliance_selection", web.allianceSelectionPostHandler)
-	mux.HandleFunc("GET /alliance_selection/websocket", web.allianceSelectionWebsocketHandler)
 	mux.HandleFunc("POST /alliance_selection/finalize", web.allianceSelectionFinalizeHandler)
 	mux.HandleFunc("POST /alliance_selection/reset", web.allianceSelectionResetHandler)
 	mux.HandleFunc("POST /alliance_selection/start", web.allianceSelectionStartHandler)
 	mux.HandleFunc("GET /api/alliances", web.alliancesApiHandler)
-	mux.HandleFunc("GET /api/arena/websocket", web.arenaWebsocketApiHandler)
 	mux.HandleFunc("GET /api/nats/token", web.natsAuthApiHandler)
 	mux.HandleFunc("GET /api/bracket/svg", web.bracketSvgApiHandler)
 	mux.HandleFunc("GET /api/matches/{type}", web.matchesApiHandler)
@@ -143,47 +204,32 @@ func (web *Web) newHandler() http.Handler {
 	mux.HandleFunc("GET /api/sponsor_slides", web.sponsorSlidesApiHandler)
 	mux.HandleFunc("GET /api/teams/{teamId}/avatar", web.teamAvatarsApiHandler)
 	mux.HandleFunc("GET /display", web.placeholderDisplayHandler)
-	mux.HandleFunc("GET /display/websocket", web.placeholderDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/alliance_station", web.allianceStationDisplayHandler)
-	mux.HandleFunc("GET /displays/alliance_station/websocket", web.allianceStationDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/announcer", web.announcerDisplayHandler)
 	mux.HandleFunc("GET /displays/announcer/match_load", web.announcerDisplayMatchLoadHandler)
 	mux.HandleFunc("GET /displays/announcer/score_posted", web.announcerDisplayScorePostedHandler)
-	mux.HandleFunc("GET /displays/announcer/websocket", web.announcerDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/audience", web.audienceDisplayHandler)
-	mux.HandleFunc("GET /displays/audience/websocket", web.audienceDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/bracket", web.bracketDisplayHandler)
-	mux.HandleFunc("GET /displays/bracket/websocket", web.bracketDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/field_monitor", web.fieldMonitorDisplayHandler)
-	mux.HandleFunc("GET /displays/field_monitor/websocket", web.fieldMonitorDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/logo", web.logoDisplayHandler)
-	mux.HandleFunc("GET /displays/logo/websocket", web.logoDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/queueing", web.queueingDisplayHandler)
 	mux.HandleFunc("GET /displays/queueing/match_load", web.queueingDisplayMatchLoadHandler)
-	mux.HandleFunc("GET /displays/queueing/websocket", web.queueingDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/rankings", web.rankingsDisplayHandler)
-	mux.HandleFunc("GET /displays/rankings/websocket", web.rankingsDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/twitch", web.twitchDisplayHandler)
-	mux.HandleFunc("GET /displays/twitch/websocket", web.twitchDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/wall", web.wallDisplayHandler)
-	mux.HandleFunc("GET /displays/wall/websocket", web.wallDisplayWebsocketHandler)
 	mux.HandleFunc("GET /displays/webpage", web.webpageDisplayHandler)
-	mux.HandleFunc("GET /displays/webpage/websocket", web.webpageDisplayWebsocketHandler)
 	mux.HandleFunc("GET /login", web.loginHandler)
 	mux.HandleFunc("POST /login", web.loginPostHandler)
 	mux.HandleFunc("GET /match_play", web.matchPlayHandler)
 	mux.HandleFunc("GET /match_play/match_load", web.matchPlayMatchLoadHandler)
-	mux.HandleFunc("GET /match_play/websocket", web.matchPlayWebsocketHandler)
 	mux.HandleFunc("GET /match_logs", web.matchLogsHandler)
 	mux.HandleFunc("GET /match_logs/{matchId}/{stationId}/log", web.matchLogsViewGetHandler)
 	mux.HandleFunc("GET /match_review", web.matchReviewHandler)
 	mux.HandleFunc("GET /match_review/{matchId}/edit", web.matchReviewEditGetHandler)
 	mux.HandleFunc("POST /match_review/{matchId}/edit", web.matchReviewEditPostHandler)
 	mux.HandleFunc("GET /panels/scoring/{position}", web.scoringPanelHandler)
-	mux.HandleFunc("GET /panels/scoring/{position}/websocket", web.scoringPanelWebsocketHandler)
 	mux.HandleFunc("GET /panels/referee", web.refereePanelHandler)
 	mux.HandleFunc("GET /panels/referee/foul_list", web.refereePanelFoulListHandler)
-	mux.HandleFunc("GET /panels/referee/websocket", web.refereePanelWebsocketHandler)
 	mux.HandleFunc("GET /reports/csv/backups", web.backupTeamsCsvReportHandler)
 	mux.HandleFunc("GET /reports/csv/fta", web.ftaCsvReportHandler)
 	mux.HandleFunc("GET /reports/csv/rankings", web.rankingsCsvReportHandler)
@@ -207,14 +253,11 @@ func (web *Web) newHandler() http.Handler {
 	mux.HandleFunc("POST /setup/db/restore", web.restoreDbHandler)
 	mux.HandleFunc("GET /setup/db/save", web.saveDbHandler)
 	mux.HandleFunc("GET /setup/displays", web.displaysGetHandler)
-	mux.HandleFunc("GET /setup/displays/websocket", web.displaysWebsocketHandler)
 	mux.HandleFunc("GET /setup/field_testing", web.fieldTestingGetHandler)
-	mux.HandleFunc("GET /setup/field_testing/websocket", web.fieldTestingWebsocketHandler)
 	mux.HandleFunc("GET /setup/judging", web.judgingGetHandler)
 	mux.HandleFunc("POST /setup/judging/clear", web.judgingClearPostHandler)
 	mux.HandleFunc("POST /setup/judging/generate", web.judgingGeneratePostHandler)
 	mux.HandleFunc("GET /setup/lower_thirds", web.lowerThirdsGetHandler)
-	mux.HandleFunc("GET /setup/lower_thirds/websocket", web.lowerThirdsWebsocketHandler)
 	mux.HandleFunc("GET /setup/schedule", web.scheduleGetHandler)
 	mux.HandleFunc("POST /setup/schedule/generate", web.scheduleGeneratePostHandler)
 	mux.HandleFunc("POST /setup/schedule/save", web.scheduleSavePostHandler)
@@ -236,6 +279,30 @@ func (web *Web) newHandler() http.Handler {
 	mux.HandleFunc("GET /setup/teams/generate_wpa_keys", web.teamsGenerateWpaKeysHandler)
 	mux.HandleFunc("GET /setup/teams/progress", web.teamsUpdateProgressBarHandler)
 	mux.HandleFunc("GET /setup/teams/refresh", web.teamsRefreshHandler)
+
+	// WebSocket handlers
+	mux.HandleFunc("GET /alliance_selection/websocket", web.allianceSelectionWebsocketHandler)
+	mux.HandleFunc("GET /alliance_station/websocket", web.allianceStationDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/alliance_station/websocket", web.allianceStationDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/announcer/websocket", web.announcerDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/audience/websocket", web.audienceDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/bracket/websocket", web.bracketDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/field_monitor/websocket", web.fieldMonitorDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/logo/websocket", web.logoDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/queueing/websocket", web.queueingDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/rankings/websocket", web.rankingsDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/twitch/websocket", web.twitchDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/wall/websocket", web.wallDisplayWebsocketHandler)
+	mux.HandleFunc("GET /displays/webpage/websocket", web.webpageDisplayWebsocketHandler)
+	mux.HandleFunc("GET /display/websocket", web.placeholderDisplayWebsocketHandler)
+	mux.HandleFunc("GET /match_play/websocket", web.matchPlayWebsocketHandler)
+	mux.HandleFunc("GET /panels/scoring/{position}/websocket", web.scoringPanelWebsocketHandler)
+	mux.HandleFunc("GET /panels/referee/websocket", web.refereePanelWebsocketHandler)
+	mux.HandleFunc("GET /setup/displays/websocket", web.displaysWebsocketHandler)
+	mux.HandleFunc("GET /setup/field_testing/websocket", web.fieldTestingWebsocketHandler)
+	mux.HandleFunc("GET /setup/lower_thirds/websocket", web.lowerThirdsWebsocketHandler)
+	mux.HandleFunc("GET /api/arena/websocket", web.arenaWebsocketApiHandler)
+
 	return mux
 }
 

@@ -7,13 +7,14 @@ package web
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/mitchellh/mapstructure"
-	"io"
-	"log"
-	"net/http"
 )
 
 // Shows the displays configuration page.
@@ -66,29 +67,37 @@ func (web *Web) displaysWebsocketHandler(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		switch messageType {
-		case "configureDisplay":
-			var displayConfig field.DisplayConfiguration
-			err = mapstructure.Decode(data, &displayConfig)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			if err = web.arena.UpdateDisplay(displayConfig); err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-		case "reloadDisplay":
-			displayId, ok := data.(string)
-			if !ok {
-				ws.WriteError(fmt.Sprintf("Failed to parse '%s' message.", messageType))
-				continue
-			}
-			web.arena.ReloadDisplaysNotifier.NotifyWithMessage(displayId)
-		case "reloadAllDisplays":
-			web.arena.ReloadDisplaysNotifier.Notify()
-		default:
-			ws.WriteError(fmt.Sprintf("Invalid message type '%s'.", messageType))
+		err = web.handleDisplaysCommand(messageType, data)
+		if err != nil {
+			ws.WriteError(err.Error())
 		}
 	}
+}
+
+func (web *Web) handleDisplaysCommand(messageType string, data interface{}) error {
+	switch messageType {
+	case "configureDisplay":
+		var displayConfig field.DisplayConfiguration
+		err := mapstructure.Decode(data, &displayConfig)
+		if err != nil {
+			return err
+		}
+		if err = web.arena.UpdateDisplay(displayConfig); err != nil {
+			return err
+		}
+	case "reloadDisplay":
+		clientId, ok := data.(string)
+		if !ok {
+			return fmt.Errorf("Failed to parse '%s' message.", messageType)
+		}
+		// Notify by clientId channel
+		websocket.PublishMessage("arena.clients."+clientId+".reload", "reload", clientId)
+	case "reloadAllDisplays":
+		web.arena.ReloadDisplaysNotifier.Notify()
+		// Also notify all clients via wildcard if needed?
+		// For now, Notify() already sends to arena.notify.reload
+	default:
+		return fmt.Errorf("Invalid message type '%s'.", messageType)
+	}
+	return nil
 }

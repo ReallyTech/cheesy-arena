@@ -4,9 +4,10 @@
 package field
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDisplayFromUrl(t *testing.T) {
@@ -14,7 +15,7 @@ func TestDisplayFromUrl(t *testing.T) {
 	display, err := DisplayFromUrl("/display", query)
 	assert.Nil(t, display)
 	if assert.NotNil(t, err) {
-		assert.Contains(t, err.Error(), "ID not present")
+		assert.Contains(t, err.Error(), "Could not determine display type")
 	}
 
 	// Test the various types.

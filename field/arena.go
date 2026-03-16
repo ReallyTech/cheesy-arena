@@ -20,6 +20,7 @@ import (
 	"github.com/Team254/cheesy-arena/partner"
 	"github.com/Team254/cheesy-arena/playoff"
 	"github.com/Team254/cheesy-arena/plc"
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 const (
@@ -146,6 +147,50 @@ func NewArena(dbPath string) (*Arena, error) {
 	arena.LoadTestMatch()
 	arena.LastMatchTimeSec = 0
 	arena.lastMatchState = -1
+
+	// Setup NATS command handler for display registration
+	// Registration is global across all display-related paths
+	handler := func(messageType string, data any, clientId string) bool {
+		if messageType == "register" {
+			params, ok := data.(map[string]any)
+			if !ok {
+				return false
+			}
+			path, _ := params["path"].(string)
+
+			// Determine display type from path
+			displayType := InvalidDisplay
+			for dt, p := range DisplayTypePaths {
+				if p == path {
+					displayType = dt
+					break
+				}
+			}
+
+			// Extract subscriptions from the registration params
+			var subscriptions []string
+			if rawSubs, ok := params["subscriptions"].([]any); ok {
+				for _, sub := range rawSubs {
+					if s, ok := sub.(string); ok {
+						subscriptions = append(subscriptions, s)
+					}
+				}
+			}
+			websocket.RegisterClientSubscriptions(clientId, subscriptions)
+
+			config := &DisplayConfiguration{
+				Id:   clientId,
+				Type: displayType,
+			}
+			arena.RegisterDisplay(config, "NATS-Client")
+			return true
+		}
+		return false
+	}
+
+	for _, path := range DisplayTypePaths {
+		websocket.RegisterCommandHandler(path, handler)
+	}
 
 	// Initialize display parameters.
 	arena.AudienceDisplayMode = "blank"

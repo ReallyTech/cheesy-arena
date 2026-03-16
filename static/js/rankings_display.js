@@ -90,7 +90,7 @@ $(function () {
   scrollMsPerRow = urlParams.get("scrollMsPerRow");
 
   // Set up the websocket back to the server. Used only for remote forcing of reloads.
-  websocket = new CheesyWebsocket("/displays/rankings/websocket", {
+  websocket = new CheesyNats("/displays/rankings/websocket", {
     eventStatus: function (event) {
       handleEventStatus(event.data);
     },

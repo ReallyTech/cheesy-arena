@@ -243,7 +243,7 @@ $(function () {
 
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/displays/field_monitor/websocket", {
+  websocket = new CheesyNats("/displays/field_monitor/websocket", {
     arenaStatus: function (event) {
       handleArenaStatus(event.data);
     },

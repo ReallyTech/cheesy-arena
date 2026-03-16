@@ -7,12 +7,13 @@ package web
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/mitchellh/mapstructure"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Shows the lower third configuration page.
@@ -74,85 +75,84 @@ func (web *Web) lowerThirdsWebsocketHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		switch messageType {
-		case "saveLowerThird":
-			var lowerThird model.LowerThird
-			err = mapstructure.Decode(data, &lowerThird)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			web.saveLowerThird(&lowerThird)
-		case "deleteLowerThird":
-			var lowerThird model.LowerThird
-			err = mapstructure.Decode(data, &lowerThird)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			err = web.arena.Database.DeleteLowerThird(lowerThird.Id)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-		case "showLowerThird":
-			var lowerThird model.LowerThird
-			err = mapstructure.Decode(data, &lowerThird)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			web.saveLowerThird(&lowerThird)
-			web.arena.LowerThird = &lowerThird
-			web.arena.ShowLowerThird = true
-			web.arena.LowerThirdNotifier.Notify()
-			continue
-		case "hideLowerThird":
-			var lowerThird model.LowerThird
-			err = mapstructure.Decode(data, &lowerThird)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			web.saveLowerThird(&lowerThird)
-			web.arena.ShowLowerThird = false
-			web.arena.LowerThirdNotifier.Notify()
-			continue
-		case "reorderLowerThird":
-			args := struct {
-				Id     int
-				MoveUp bool
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-			err = web.reorderLowerThird(args.Id, args.MoveUp)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-		case "setAudienceDisplay":
-			mode, ok := data.(string)
-			if !ok {
-				ws.WriteError(fmt.Sprintf("Failed to parse '%s' message.", messageType))
-				continue
-			}
-			web.arena.SetAudienceDisplayMode(mode)
-			continue
-		default:
-			ws.WriteError(fmt.Sprintf("Invalid message type '%s'.", messageType))
-			continue
-		}
-
-		// Force a reload of the client to render the updated lower thirds list.
-		err = ws.WriteNotifier(web.arena.ReloadDisplaysNotifier)
+		err = web.handleLowerThirdsCommand(messageType, data)
 		if err != nil {
-			log.Println(err)
-			return
+			ws.WriteError(err.Error())
+		} else {
+			// Force a reload of the client to render the updated lower thirds list.
+			err = ws.WriteNotifier(web.arena.ReloadDisplaysNotifier)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
+}
+
+func (web *Web) handleLowerThirdsCommand(messageType string, data interface{}) error {
+	switch messageType {
+	case "saveLowerThird":
+		var lowerThird model.LowerThird
+		err := mapstructure.Decode(data, &lowerThird)
+		if err != nil {
+			return err
+		}
+		web.saveLowerThird(&lowerThird)
+	case "deleteLowerThird":
+		var lowerThird model.LowerThird
+		err := mapstructure.Decode(data, &lowerThird)
+		if err != nil {
+			return err
+		}
+		err = web.arena.Database.DeleteLowerThird(lowerThird.Id)
+		if err != nil {
+			return err
+		}
+	case "showLowerThird":
+		var lowerThird model.LowerThird
+		err := mapstructure.Decode(data, &lowerThird)
+		if err != nil {
+			return err
+		}
+		web.saveLowerThird(&lowerThird)
+		web.arena.LowerThird = &lowerThird
+		web.arena.ShowLowerThird = true
+		web.arena.LowerThirdNotifier.Notify()
+		return nil
+	case "hideLowerThird":
+		var lowerThird model.LowerThird
+		err := mapstructure.Decode(data, &lowerThird)
+		if err != nil {
+			return err
+		}
+		web.saveLowerThird(&lowerThird)
+		web.arena.ShowLowerThird = false
+		web.arena.LowerThirdNotifier.Notify()
+		return nil
+	case "reorderLowerThird":
+		args := struct {
+			Id     int
+			MoveUp bool
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+		err = web.reorderLowerThird(args.Id, args.MoveUp)
+		if err != nil {
+			return err
+		}
+	case "setAudienceDisplay":
+		mode, ok := data.(string)
+		if !ok {
+			return fmt.Errorf("Failed to parse '%s' message.", messageType)
+		}
+		web.arena.SetAudienceDisplayMode(mode)
+		return nil
+	default:
+		return fmt.Errorf("Invalid message type '%s'.", messageType)
+	}
+	return nil
 }
 
 func (web *Web) saveLowerThird(lowerThird *model.LowerThird) error {

@@ -74,7 +74,7 @@ var handleScorePosted = function (data) {
 
 $(function () {
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/displays/announcer/websocket", {
+  websocket = new CheesyNats("/displays/announcer/websocket", {
     audienceDisplayMode: function (event) {
       handleAudienceDisplayMode(event.data);
     },

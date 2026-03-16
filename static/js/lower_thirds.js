@@ -58,7 +58,7 @@ const setAudienceDisplay = function () {
 
 $(function () {
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/setup/lower_thirds/websocket", {
+  websocket = new CheesyNats("/setup/lower_thirds/websocket", {
     audienceDisplayMode: function (event) {
       handleAudienceDisplayMode(event.data);
     },

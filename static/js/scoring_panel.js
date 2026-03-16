@@ -251,7 +251,7 @@ $(function () {
   resetLocalState();
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/panels/scoring/" + position + "/websocket", {
+  websocket = new CheesyNats("/panels/scoring/" + position + "/websocket", {
     matchLoad: function (event) {
       handleMatchLoad(event.data);
     },
@@ -264,5 +264,7 @@ $(function () {
     resetLocalState: function (event) {
       resetLocalState();
     },
+  }, {
+    commandPrefix: "arena.panel." + alliance
   });
 });

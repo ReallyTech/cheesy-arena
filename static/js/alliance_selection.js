@@ -53,7 +53,7 @@ $(function () {
   newDateTimePicker("startTimePicker", startTime.toDate());
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/alliance_selection/websocket", {
+  websocket = new CheesyNats("/alliance_selection/websocket", {
     allianceSelection: function (event) {
       handleAllianceSelection(event.data);
     },

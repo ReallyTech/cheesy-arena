@@ -7,7 +7,6 @@ package field
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/websocket"
 	"net/url"
 	"reflect"
 	"sort"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 const (
@@ -55,7 +56,7 @@ var DisplayTypeNames = map[DisplayType]string{
 	WebpageDisplay:         "Web Page",
 }
 
-var displayTypePaths = map[DisplayType]string{
+var DisplayTypePaths = map[DisplayType]string{
 	PlaceholderDisplay:     "/display",
 	AllianceStationDisplay: "/displays/alliance_station",
 	AnnouncerDisplay:       "/displays/announcer",
@@ -89,19 +90,18 @@ type DisplayConfiguration struct {
 
 // Parses the given display URL path and query string to extract the configuration.
 func DisplayFromUrl(path string, query map[string][]string) (*DisplayConfiguration, error) {
-	if _, ok := query["displayId"]; !ok {
-		return nil, fmt.Errorf("Display ID not present in request.")
+	var displayConfig DisplayConfiguration
+	if ids, ok := query["clientId"]; ok {
+		displayConfig.Id = ids[0]
 	}
 
-	var displayConfig DisplayConfiguration
-	displayConfig.Id = query["displayId"][0]
 	if nickname, ok := query["nickname"]; ok {
 		displayConfig.Nickname, _ = url.QueryUnescape(nickname[0])
 	}
 
 	// Determine type from the websocket connection URL. This way of doing it isn't super efficient, but it's not really
 	// a concern since it should happen relatively infrequently.
-	for displayType, displayPath := range displayTypePaths {
+	for displayType, displayPath := range DisplayTypePaths {
 		if path == displayPath+"/websocket" {
 			displayConfig.Type = displayType
 			break
@@ -125,7 +125,7 @@ func DisplayFromUrl(path string, query map[string][]string) (*DisplayConfigurati
 // Returns the URL string for the given display that includes all of its configuration parameters.
 func (display *Display) ToUrl() string {
 	var builder strings.Builder
-	builder.WriteString(displayTypePaths[display.DisplayConfiguration.Type])
+	builder.WriteString(DisplayTypePaths[display.DisplayConfiguration.Type])
 	builder.WriteString("?displayId=")
 	builder.WriteString(url.QueryEscape(display.DisplayConfiguration.Id))
 	if display.DisplayConfiguration.Nickname != "" {

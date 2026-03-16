@@ -127,9 +127,9 @@ const handleRealtimeScore = function (data) {
     let l4_auto_total = score.Reef.AutoBranches[2].filter(Boolean).length;
 
     let scoreRoot = `${alliance}ScoreSummary`;
-    $(`#${scoreRoot} .team-1-leave`).text(score.LeaveStatuses[0] ? "✓" : "❌");
-    $(`#${scoreRoot} .team-2-leave`).text(score.LeaveStatuses[1] ? "✓" : "❌");
-    $(`#${scoreRoot} .team-3-leave`).text(score.LeaveStatuses[2] ? "✓" : "❌");
+    $(`#${scoreRoot} .team-1-leave`).text(score.LeaveStatuses[0] ? "Y" : "N");
+    $(`#${scoreRoot} .team-2-leave`).text(score.LeaveStatuses[1] ? "Y" : "N");
+    $(`#${scoreRoot} .team-3-leave`).text(score.LeaveStatuses[2] ? "Y" : "N");
     $(`#${scoreRoot} .team-1-endgame`).text(endgameStatusNames[score.EndgameStatuses[0]]);
     $(`#${scoreRoot} .team-2-endgame`).text(endgameStatusNames[score.EndgameStatuses[1]]);
     $(`#${scoreRoot} .team-3-endgame`).text(endgameStatusNames[score.EndgameStatuses[2]]);
@@ -196,7 +196,7 @@ $(function () {
   $(".headRef-dependent").attr("data-hr", urlParams.get("hr"));
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/panels/referee/websocket", {
+  websocket = new CheesyNats("/panels/referee/websocket", {
     matchLoad: function (event) {
       handleMatchLoad(event.data);
     },
@@ -209,5 +209,7 @@ $(function () {
     scoringStatus: function (event) {
       handleScoringStatus(event.data);
     },
+  }, {
+    commandPrefix: "arena.panel.referee"
   });
 });

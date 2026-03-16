@@ -4,10 +4,11 @@
 package game
 
 import (
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAddScoreSummary(t *testing.T) {
@@ -40,19 +41,63 @@ func TestAddScoreSummary(t *testing.T) {
 
 	// Add a loss.
 	rankingFields.AddScoreSummary(redSummary, blueSummary, false)
-	assert.Equal(t, RankingFields{2, 0, 67, 30, 19, 0.9451961492941164, 0, 1, 0, 0, 1}, rankingFields)
+	assert.Equal(t, 2, rankingFields.RankingPoints)
+	assert.Equal(t, 0, rankingFields.CoopertitionPoints)
+	assert.Equal(t, 67, rankingFields.MatchPoints)
+	assert.Equal(t, 30, rankingFields.AutoPoints)
+	assert.Equal(t, 19, rankingFields.BargePoints)
+	assert.Equal(t, 0, rankingFields.Wins)
+	assert.Equal(t, 1, rankingFields.Losses)
+	assert.Equal(t, 0, rankingFields.Ties)
+	assert.Equal(t, 0, rankingFields.Disqualifications)
+	assert.Equal(t, 1, rankingFields.Played)
+	assert.Greater(t, rankingFields.Random, 0.0)
+	assert.Less(t, rankingFields.Random, 1.0)
 
 	// Add a win.
 	rankingFields.AddScoreSummary(blueSummary, redSummary, false)
-	assert.Equal(t, RankingFields{6, 1, 128, 46, 33, 0.24496508529377975, 1, 1, 0, 0, 2}, rankingFields)
+	assert.Equal(t, 6, rankingFields.RankingPoints)
+	assert.Equal(t, 1, rankingFields.CoopertitionPoints)
+	assert.Equal(t, 128, rankingFields.MatchPoints)
+	assert.Equal(t, 46, rankingFields.AutoPoints)
+	assert.Equal(t, 33, rankingFields.BargePoints)
+	assert.Equal(t, 1, rankingFields.Wins)
+	assert.Equal(t, 1, rankingFields.Losses)
+	assert.Equal(t, 0, rankingFields.Ties)
+	assert.Equal(t, 0, rankingFields.Disqualifications)
+	assert.Equal(t, 2, rankingFields.Played)
+	assert.Greater(t, rankingFields.Random, 0.0)
+	assert.Less(t, rankingFields.Random, 1.0)
 
 	// Add a tie.
 	rankingFields.AddScoreSummary(redSummary, redSummary, false)
-	assert.Equal(t, RankingFields{9, 1, 195, 76, 52, 0.6559562651954052, 1, 1, 1, 0, 3}, rankingFields)
+	assert.Equal(t, 9, rankingFields.RankingPoints)
+	assert.Equal(t, 1, rankingFields.CoopertitionPoints)
+	assert.Equal(t, 195, rankingFields.MatchPoints)
+	assert.Equal(t, 76, rankingFields.AutoPoints)
+	assert.Equal(t, 52, rankingFields.BargePoints)
+	assert.Equal(t, 1, rankingFields.Wins)
+	assert.Equal(t, 1, rankingFields.Losses)
+	assert.Equal(t, 1, rankingFields.Ties)
+	assert.Equal(t, 0, rankingFields.Disqualifications)
+	assert.Equal(t, 3, rankingFields.Played)
+	assert.Greater(t, rankingFields.Random, 0.0)
+	assert.Less(t, rankingFields.Random, 1.0)
 
 	// Add a disqualification.
 	rankingFields.AddScoreSummary(blueSummary, redSummary, true)
-	assert.Equal(t, RankingFields{9, 1, 195, 76, 52, 0.05434383959970039, 1, 1, 1, 1, 4}, rankingFields)
+	assert.Equal(t, 9, rankingFields.RankingPoints)
+	assert.Equal(t, 1, rankingFields.CoopertitionPoints)
+	assert.Equal(t, 195, rankingFields.MatchPoints)
+	assert.Equal(t, 76, rankingFields.AutoPoints)
+	assert.Equal(t, 52, rankingFields.BargePoints)
+	assert.Equal(t, 1, rankingFields.Wins)
+	assert.Equal(t, 1, rankingFields.Losses)
+	assert.Equal(t, 1, rankingFields.Ties)
+	assert.Equal(t, 1, rankingFields.Disqualifications)
+	assert.Equal(t, 4, rankingFields.Played)
+	assert.Greater(t, rankingFields.Random, 0.0)
+	assert.Less(t, rankingFields.Random, 1.0)
 }
 
 func TestSortRankings(t *testing.T) {

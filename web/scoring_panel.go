@@ -7,15 +7,16 @@ package web
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strings"
+
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/mitchellh/mapstructure"
-	"io"
-	"log"
-	"net/http"
-	"strings"
 )
 
 type ScoringPosition struct {
@@ -114,14 +115,6 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 		handleWebErr(w, fmt.Errorf("Invalid position '%s'.", position))
 		return
 	}
-	alliance := strings.Split(position, "_")[0]
-
-	var realtimeScore **field.RealtimeScore
-	if alliance == "red" {
-		realtimeScore = &web.arena.RedRealtimeScore
-	} else {
-		realtimeScore = &web.arena.BlueRealtimeScore
-	}
 
 	ws, err := websocket.NewWebsocket(w, r)
 	if err != nil {
@@ -156,138 +149,150 @@ func (web *Web) scoringPanelWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			log.Println(err)
 			return
 		}
-		score := &(*realtimeScore).CurrentScore
-		scoreChanged := false
-
-		if command == "commitMatch" {
-			if web.arena.MatchState != field.PostMatch {
-				// Don't allow committing the score until the match is over.
-				ws.WriteError("Cannot commit score: Match is not over.")
-				continue
-			}
-			web.arena.ScoringPanelRegistry.SetScoreCommitted(position, ws)
-			web.arena.ScoringStatusNotifier.Notify()
-		} else if command == "reef" {
-			args := struct {
-				ReefPosition int
-				ReefLevel    int
-				Current      bool
-				Autonomous   bool
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-
-			if args.ReefPosition >= 1 && args.ReefPosition <= 12 && args.ReefLevel >= 2 && args.ReefLevel <= 4 {
-				level := game.Level(args.ReefLevel - 2)
-				reefIndex := args.ReefPosition - 1
-				if args.Current {
-					score.Reef.Branches[level][reefIndex] = !score.Reef.Branches[level][reefIndex]
-					scoreChanged = true
-				}
-				if args.Autonomous {
-					score.Reef.AutoBranches[level][reefIndex] = !score.Reef.AutoBranches[level][reefIndex]
-					scoreChanged = true
-				}
-				scoreChanged = true
-			}
-
-		} else if command == "endgame" {
-			args := struct {
-				TeamPosition  int
-				EndgameStatus int
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-
-			if args.TeamPosition >= 1 && args.TeamPosition <= 3 && args.EndgameStatus >= 0 && args.EndgameStatus <= 3 {
-				endgameStatus := game.EndgameStatus(args.EndgameStatus)
-				score.EndgameStatuses[args.TeamPosition-1] = endgameStatus
-				scoreChanged = true
-			}
-		} else if command == "leave" {
-			args := struct {
-				TeamPosition int
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-
-			if args.TeamPosition >= 1 && args.TeamPosition <= 3 {
-				score.LeaveStatuses[args.TeamPosition-1] = !score.LeaveStatuses[args.TeamPosition-1]
-				scoreChanged = true
-			}
-		} else if command == "addFoul" {
-			args := struct {
-				Alliance string
-				IsMajor  bool
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-
-			// Add the foul to the correct alliance's list.
-			foul := game.Foul{FoulId: web.arena.NextFoulId, IsMajor: args.IsMajor}
-			web.arena.NextFoulId++
-			if args.Alliance == "red" {
-				web.arena.RedRealtimeScore.CurrentScore.Fouls =
-					append(web.arena.RedRealtimeScore.CurrentScore.Fouls, foul)
-			} else {
-				web.arena.BlueRealtimeScore.CurrentScore.Fouls =
-					append(web.arena.BlueRealtimeScore.CurrentScore.Fouls, foul)
-			}
-			web.arena.RealtimeScoreNotifier.Notify()
-		} else {
-			args := struct {
-				Adjustment int
-				Current    bool
-				Autonomous bool
-				NearSide   bool
-			}{}
-			err = mapstructure.Decode(data, &args)
-			if err != nil {
-				ws.WriteError(err.Error())
-				continue
-			}
-
-			switch command {
-			case "barge":
-				score.BargeAlgae = max(0, score.BargeAlgae+args.Adjustment)
-				scoreChanged = true
-			case "processor":
-				score.ProcessorAlgae = max(0, score.ProcessorAlgae+args.Adjustment)
-				scoreChanged = true
-			case "trough":
-				if args.Current {
-					if args.NearSide {
-						score.Reef.TroughNear = max(0, score.Reef.TroughNear+args.Adjustment)
-					} else {
-						score.Reef.TroughFar = max(0, score.Reef.TroughFar+args.Adjustment)
-					}
-					scoreChanged = true
-				}
-				if args.Autonomous {
-					if args.NearSide {
-						score.Reef.AutoTroughNear = max(0, score.Reef.AutoTroughNear+args.Adjustment)
-					} else {
-						score.Reef.AutoTroughFar = max(0, score.Reef.AutoTroughFar+args.Adjustment)
-					}
-					scoreChanged = true
-				}
-			}
-		}
-
-		if scoreChanged {
-			web.arena.RealtimeScoreNotifier.Notify()
+		err = web.handleScoringCommand(position, command, data)
+		if err != nil {
+			ws.WriteError(err.Error())
 		}
 	}
+}
+
+func (web *Web) handleScoringCommand(position string, command string, data interface{}) error {
+	alliance := strings.Split(position, "_")[0]
+
+	var realtimeScore **field.RealtimeScore
+	if alliance == "red" {
+		realtimeScore = &web.arena.RedRealtimeScore
+	} else {
+		realtimeScore = &web.arena.BlueRealtimeScore
+	}
+
+	score := &(*realtimeScore).CurrentScore
+	scoreChanged := false
+
+	switch command {
+	case "commitMatch":
+		if web.arena.MatchState != field.PostMatch {
+			// Don't allow committing the score until the match is over.
+			return fmt.Errorf("Cannot commit score: Match is not over.")
+		}
+		web.arena.ScoringPanelRegistry.SetScoreCommittedByPosition(position)
+		web.arena.ScoringStatusNotifier.Notify()
+	case "reef":
+		args := struct {
+			ReefPosition int
+			ReefLevel    int
+			Current      bool
+			Autonomous   bool
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+
+		if args.ReefPosition >= 1 && args.ReefPosition <= 12 && args.ReefLevel >= 2 && args.ReefLevel <= 4 {
+			level := game.Level(args.ReefLevel - 2)
+			reefIndex := args.ReefPosition - 1
+			if args.Current {
+				score.Reef.Branches[level][reefIndex] = !score.Reef.Branches[level][reefIndex]
+				scoreChanged = true
+			}
+			if args.Autonomous {
+				score.Reef.AutoBranches[level][reefIndex] = !score.Reef.AutoBranches[level][reefIndex]
+				scoreChanged = true
+			}
+			scoreChanged = true
+		}
+
+	case "endgame":
+		args := struct {
+			TeamPosition  int
+			EndgameStatus int
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+
+		if args.TeamPosition >= 1 && args.TeamPosition <= 3 && args.EndgameStatus >= 0 && args.EndgameStatus <= 3 {
+			endgameStatus := game.EndgameStatus(args.EndgameStatus)
+			score.EndgameStatuses[args.TeamPosition-1] = endgameStatus
+			scoreChanged = true
+		}
+	case "leave":
+		args := struct {
+			TeamPosition int
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+
+		if args.TeamPosition >= 1 && args.TeamPosition <= 3 {
+			score.LeaveStatuses[args.TeamPosition-1] = !score.LeaveStatuses[args.TeamPosition-1]
+			scoreChanged = true
+		}
+	case "addFoul":
+		args := struct {
+			Alliance string
+			IsMajor  bool
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+
+		// Add the foul to the correct alliance's list.
+		foul := game.Foul{FoulId: web.arena.NextFoulId, IsMajor: args.IsMajor}
+		web.arena.NextFoulId++
+		if args.Alliance == "red" {
+			web.arena.RedRealtimeScore.CurrentScore.Fouls =
+				append(web.arena.RedRealtimeScore.CurrentScore.Fouls, foul)
+		} else {
+			web.arena.BlueRealtimeScore.CurrentScore.Fouls =
+				append(web.arena.BlueRealtimeScore.CurrentScore.Fouls, foul)
+		}
+		web.arena.RealtimeScoreNotifier.Notify()
+	default:
+		args := struct {
+			Adjustment int
+			Current    bool
+			Autonomous bool
+			NearSide   bool
+		}{}
+		err := mapstructure.Decode(data, &args)
+		if err != nil {
+			return err
+		}
+
+		switch command {
+		case "barge":
+			score.BargeAlgae = max(0, score.BargeAlgae+args.Adjustment)
+			scoreChanged = true
+		case "processor":
+			score.ProcessorAlgae = max(0, score.ProcessorAlgae+args.Adjustment)
+			scoreChanged = true
+		case "trough":
+			if args.Current {
+				if args.NearSide {
+					score.Reef.TroughNear = max(0, score.Reef.TroughNear+args.Adjustment)
+				} else {
+					score.Reef.TroughFar = max(0, score.Reef.TroughFar+args.Adjustment)
+				}
+				scoreChanged = true
+			}
+			if args.Autonomous {
+				if args.NearSide {
+					score.Reef.AutoTroughNear = max(0, score.Reef.AutoTroughNear+args.Adjustment)
+				} else {
+					score.Reef.AutoTroughFar = max(0, score.Reef.AutoTroughFar+args.Adjustment)
+				}
+				scoreChanged = true
+			}
+		}
+	}
+
+	if scoreChanged {
+		web.arena.RealtimeScoreNotifier.Notify()
+	}
+	return nil
 }

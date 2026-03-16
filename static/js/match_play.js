@@ -394,7 +394,7 @@ $(function () {
   const tooltipList = [...tooltipTriggerList].map(element => new bootstrap.Tooltip(element));
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/match_play/websocket", {
+  websocket = new CheesyNats("/match_play/websocket", {
     allianceStationDisplayMode: function (event) {
       handleAllianceStationDisplayMode(event.data);
     },

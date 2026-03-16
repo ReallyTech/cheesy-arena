@@ -29,7 +29,7 @@ var handlePlcIoChange = function (data) {
 
 $(function () {
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/setup/field_testing/websocket", {
+  websocket = new CheesyNats("/setup/field_testing/websocket", {
     plcIoChange: function (event) {
       handlePlcIoChange(event.data);
     }

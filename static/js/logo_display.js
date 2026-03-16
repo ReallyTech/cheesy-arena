@@ -14,5 +14,5 @@ $(function () {
   messageDiv.toggle(message !== "");
 
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/displays/logo/websocket", {});
+  websocket = new CheesyNats("/displays/logo/websocket", {});
 });

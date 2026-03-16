@@ -6,8 +6,9 @@
 package field
 
 import (
-	"github.com/Team254/cheesy-arena/websocket"
 	"sync"
+
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 type ScoringPanelRegistry struct {
@@ -70,6 +71,16 @@ func (registry *ScoringPanelRegistry) SetScoreCommitted(position string, ws *web
 	defer registry.mutex.Unlock()
 
 	registry.scoringPanels[position][ws] = true
+}
+
+// Sets the score committed state to true for all panels at the given position.
+func (registry *ScoringPanelRegistry) SetScoreCommittedByPosition(position string) {
+	registry.mutex.Lock()
+	defer registry.mutex.Unlock()
+
+	for ws := range registry.scoringPanels[position] {
+		registry.scoringPanels[position][ws] = true
+	}
 }
 
 // Removes a panel from the registry, referenced by its websocket pointer.

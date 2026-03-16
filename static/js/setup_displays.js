@@ -67,7 +67,7 @@ var handleDisplayConfiguration = function (data) {
 
 $(function () {
   // Set up the websocket back to the server.
-  websocket = new CheesyWebsocket("/setup/displays/websocket", {
+  websocket = new CheesyNats("/setup/displays/websocket", {
     displayConfiguration: function (event) {
       handleDisplayConfiguration(event.data);
     }

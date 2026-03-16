@@ -7,7 +7,6 @@ package websocket
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const pingInterval = time.Second * 10
@@ -47,10 +48,16 @@ func NewTestWebsocket(conn *websocket.Conn) *Websocket {
 }
 
 func (ws *Websocket) Close() error {
+	if ws == nil || ws.conn == nil {
+		return fmt.Errorf("websocket connection is not initialized")
+	}
 	return ws.conn.Close()
 }
 
 func (ws *Websocket) Read() (string, any, error) {
+	if ws == nil || ws.conn == nil {
+		return "", nil, fmt.Errorf("websocket connection is not initialized")
+	}
 	var message Message
 	err := ws.conn.ReadJSON(&message)
 	if websocket.IsCloseError(
@@ -90,6 +97,9 @@ func (ws *Websocket) ReadWithTimeout(timeout time.Duration) (string, any, error)
 }
 
 func (ws *Websocket) Write(messageType string, data any) error {
+	if ws == nil || ws.conn == nil {
+		return fmt.Errorf("websocket connection is not initialized")
+	}
 	ws.writeMutex.Lock()
 	defer ws.writeMutex.Unlock()
 	err := ws.conn.WriteJSON(Message{messageType, data})

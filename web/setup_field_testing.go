@@ -7,12 +7,13 @@ package web
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/game"
-	"github.com/Team254/cheesy-arena/model"
-	"github.com/Team254/cheesy-arena/websocket"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/Team254/cheesy-arena/game"
+	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/websocket"
 )
 
 // Shows the Field Testing page.
@@ -69,17 +70,23 @@ func (web *Web) fieldTestingWebsocketHandler(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		switch messageType {
-		case "playSound":
-			sound, ok := data.(string)
-			if !ok {
-				ws.WriteError(fmt.Sprintf("Failed to parse '%s' message.", messageType))
-				continue
-			}
-			web.arena.PlaySoundNotifier.NotifyWithMessage(sound)
-		default:
-			ws.WriteError(fmt.Sprintf("Invalid message type '%s'.", messageType))
-			continue
+		err = web.handleFieldTestingCommand(messageType, data)
+		if err != nil {
+			ws.WriteError(err.Error())
 		}
 	}
+}
+
+func (web *Web) handleFieldTestingCommand(messageType string, data interface{}) error {
+	switch messageType {
+	case "playSound":
+		sound, ok := data.(string)
+		if !ok {
+			return fmt.Errorf("Failed to parse '%s' message.", messageType)
+		}
+		web.arena.PlaySoundNotifier.NotifyWithMessage(sound)
+	default:
+		return fmt.Errorf("Invalid message type '%s'.", messageType)
+	}
+	return nil
 }

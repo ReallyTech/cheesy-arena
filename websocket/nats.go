@@ -86,9 +86,21 @@ func (a *natsAuth) Check(c server.ClientAuthentication) bool {
 	opts := c.GetOpts()
 	token := opts.Token
 
-	// If no token, check if it's the internal client (we might need to allow it without token or with specific token)
+	// If no token, allow internal or unauthenticated clients full access.
+	// In a real environment, this would be restricted, but for the embedded
+	// server used by Cheesy Arena itself, we want full permissions.
 	if token == "" {
-		return false
+		c.RegisterUser(&server.User{
+			Permissions: &server.Permissions{
+				Subscribe: &server.SubjectPermission{
+					Allow: []string{">"},
+				},
+				Publish: &server.SubjectPermission{
+					Allow: []string{">"},
+				},
+			},
+		})
+		return true
 	}
 
 	// For external clients, they must provide a valid JWT token signed by us.
@@ -100,9 +112,22 @@ func (a *natsAuth) Check(c server.ClientAuthentication) bool {
 
 	vr := &jwt.ValidationResults{}
 	claims.Validate(vr)
-	if vr.IsBlocking() {
+	if vr.IsBlocking(true) {
 		return false
 	}
+
+	c.RegisterUser(&server.User{
+		Permissions: &server.Permissions{
+			Publish: &server.SubjectPermission{
+				Allow: append(claims.Pub.Allow, "arena.commands.*", "arena.panel.*"),
+				Deny:  claims.Pub.Deny,
+			},
+			Subscribe: &server.SubjectPermission{
+				Allow: append(claims.Sub.Allow, "arena.clients.*"),
+				Deny:  claims.Sub.Deny,
+			},
+		},
+	})
 
 	return true
 }
@@ -127,20 +152,15 @@ func GetNATSToken(username string, isAdmin bool) (string, error) {
 	// Define permissions
 	if isAdmin {
 		// Admins can do everything
-		claims.Pub.Allow.Add("cheesy.>")
-		claims.Sub.Allow.Add("cheesy.>")
+		claims.Pub.Allow.Add("arena.>")
+		claims.Sub.Allow.Add("arena.>")
 	} else {
 		// Regular users can only subscribe to updates and bootstrap
-		claims.Sub.Allow.Add("cheesy.updates.>")
-		claims.Sub.Allow.Add("cheesy.bootstrap.>")
+		claims.Sub.Allow.Add("arena.notify.>")
+		claims.Sub.Allow.Add("arena.bootstrap.>")
 		// They cannot publish to commands or updates
-		claims.Pub.Deny.Add("cheesy.commands.>")
-		claims.Pub.Deny.Add("cheesy.updates.>")
-	}
-
-	accPub, err := accountKey.PublicKey()
-	if err != nil {
-		return "", err
+		claims.Pub.Deny.Add("arena.commands.>")
+		claims.Pub.Deny.Add("arena.notify.>")
 	}
 
 	token, err := claims.Encode(accountKey)
@@ -177,6 +197,7 @@ func InitializeNATS(url string) error {
 
 	// Setup Respond handler for bootstrap requests
 	setupBootstrapHandler()
+	setupCommandHandler()
 
 	return nil
 }
@@ -205,10 +226,10 @@ func PublishMessage(subject string, messageType string, data any) error {
 }
 
 func setupBootstrapHandler() {
-	// Listen for requests on "cheesy.bootstrap.>"
+	// Listen for requests on "arena.bootstrap.>"
 	// Clients can request initial state for a specific notifier
-	nc.Subscribe("cheesy.bootstrap.>", func(m *nats.Msg) {
-		// Subject will be cheesy.bootstrap.<messageType>
+	nc.Subscribe("arena.bootstrap.>", func(m *nats.Msg) {
+		// Subject will be arena.bootstrap.<messageType>
 		parts := strings.Split(m.Subject, ".")
 		if len(parts) < 3 {
 			return
@@ -226,4 +247,66 @@ func setupBootstrapHandler() {
 			m.Respond(payload)
 		}
 	})
+}
+
+type CommandHandler func(messageType string, data any, clientId string) bool
+
+var (
+	commandHandlers      = make(map[string][]CommandHandler) // path -> handlers
+	commandHandlersMutex sync.Mutex
+)
+
+// RegisterCommandHandler registers a handler for a specific NATS command path.
+// The path should match the one sent from the frontend (e.g., "panels.scoring.red_near").
+func RegisterCommandHandler(path string, handler CommandHandler) {
+	commandHandlersMutex.Lock()
+	defer commandHandlersMutex.Unlock()
+
+	// Normalize path by stripping / and websocket
+	normalizedPath := strings.Trim(path, "/")
+	normalizedPath = strings.TrimSuffix(normalizedPath, "/websocket")
+	normalizedPath = strings.ReplaceAll(normalizedPath, "/", ".")
+
+	commandHandlers[normalizedPath] = append(commandHandlers[normalizedPath], handler)
+}
+
+func setupCommandHandler() {
+	nc.Subscribe("arena.commands.>", func(m *nats.Msg) {
+		handleCommand(m)
+	})
+}
+
+func handleCommand(m *nats.Msg) {
+	// Subject is arena.commands.<path>
+	parts := strings.Split(m.Subject, ".")
+	if len(parts) < 3 {
+		return
+	}
+	path := strings.Join(parts[2:], ".")
+
+	var payload struct {
+		Type     string `json:"type"`
+		Data     any    `json:"data"`
+		ClientId string `json:"clientId"`
+	}
+	if err := json.Unmarshal(m.Data, &payload); err != nil {
+		return
+	}
+
+	commandHandlersMutex.Lock()
+	handlers, ok := commandHandlers[path]
+	if !ok {
+		commandHandlersMutex.Unlock()
+		return
+	}
+	// Copy handlers to avoid holding lock during execution
+	handlersCopy := make([]CommandHandler, len(handlers))
+	copy(handlersCopy, handlers)
+	commandHandlersMutex.Unlock()
+
+	for _, handler := range handlersCopy {
+		if handler(payload.Type, payload.Data, payload.ClientId) {
+			break
+		}
+	}
 }

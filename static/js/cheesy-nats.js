@@ -11,7 +11,7 @@ var CheesyNats = function (path, events, natsUrl) {
   this.sc = null; // String codec
 
   // Default NATS URL if not provided
-  natsUrl = natsUrl || "ws://" + window.location.hostname + ":4222";
+  natsUrl = natsUrl || "/api/nats/token";
 
   // Insert a default error-handling event if a custom one doesn't already exist.
   if (!events.hasOwnProperty("error")) {
@@ -40,9 +40,20 @@ var CheesyNats = function (path, events, natsUrl) {
         return;
       }
 
+      // Fetch NATS token and URL from backend
+      const response = await fetch(natsUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch NATS token from " + natsUrl);
+      }
+      const auth = await response.json();
+
       this.sc = nats.StringCodec();
-      this.nc = await nats.connect({ servers: natsUrl });
-      console.log("NATS connected to " + natsUrl);
+      this.nc = await nats.connect({
+        servers: auth.url || "ws://" + window.location.hostname + ":8081",
+        token: auth.token,
+        maxReconnectAttempts: -1,
+      });
+      console.log("NATS connected with token to " + (auth.url || "ws://" + window.location.hostname + ":8081"));
 
       this.nc.closed().then((err) => {
         console.log("NATS connection closed. Reconnecting in 3 seconds...", err ? err : "");

@@ -8,16 +8,52 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/Team254/cheesy-arena/partner"
 	"github.com/Team254/cheesy-arena/playoff"
 	"github.com/Team254/cheesy-arena/websocket"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
 )
+
+type natsAuthResponse struct {
+	Token string `json:"token"`
+	Url   string `json:"url"`
+}
+
+// Websocket API for receiving arena status updates.
+func (web *Web) natsAuthApiHandler(w http.ResponseWriter, r *http.Request) {
+	session := web.getUserSessionFromCookie(r)
+	if session == nil {
+		handleWebErr(w, fmt.Errorf("Not logged in."))
+		return
+	}
+
+	isAdmin := session.Username == adminUser
+	token, err := websocket.GetNATSToken(session.Username, isAdmin)
+	if err != nil {
+		handleWebErr(w, err)
+		return
+	}
+
+	resp := natsAuthResponse{
+		Token: token,
+		Url:   fmt.Sprintf("ws://%s:8081", r.Host), // Use our NATS-over-WebSockets port
+	}
+
+	jsonData, err := json.Marshal(resp)
+	if err != nil {
+		handleWebErr(w, err)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(jsonData)
+}
 
 type MatchResultWithSummary struct {
 	model.MatchResult

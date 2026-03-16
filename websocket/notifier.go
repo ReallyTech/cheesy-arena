@@ -13,6 +13,23 @@ import (
 // Allow the listeners to buffer a small number of notifications to streamline delivery.
 const notifyBufferSize = 5
 
+var (
+	notifierRegistry = make(map[string]*Notifier)
+	registryMutex    sync.Mutex
+)
+
+// GetNotifierState returns the latest state for the given notifier type.
+func GetNotifierState(messageType string) any {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+
+	notifier, ok := notifierRegistry[messageType]
+	if !ok {
+		return nil
+	}
+	return notifier.getMessageBody()
+}
+
 type Notifier struct {
 	messageType     string
 	messageProducer func() any
@@ -28,6 +45,12 @@ type messageEnvelope struct {
 func NewNotifier(messageType string, messageProducer func() any) *Notifier {
 	notifier := &Notifier{messageType: messageType, messageProducer: messageProducer}
 	notifier.listeners = make(map[chan messageEnvelope]struct{})
+
+	// Add to registry for bootstrap support
+	registryMutex.Lock()
+	notifierRegistry[messageType] = notifier
+	registryMutex.Unlock()
+
 	return notifier
 }
 
@@ -42,6 +65,10 @@ func (notifier *Notifier) Notify() {
 func (notifier *Notifier) NotifyWithMessage(messageBody any) {
 	notifier.mutex.Lock()
 	defer notifier.mutex.Unlock()
+
+	// Broadcast to NATS
+	subject := "cheesy.updates." + notifier.messageType
+	PublishMessage(subject, notifier.messageType, messageBody)
 
 	message := messageEnvelope{messageType: notifier.messageType, messageBody: messageBody}
 	for listener := range notifier.listeners {

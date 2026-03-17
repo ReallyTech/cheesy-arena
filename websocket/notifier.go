@@ -62,16 +62,15 @@ func (notifier *Notifier) Notify() {
 
 // Sends the given message to all registered listeners, and cleans up any listeners that have closed. If there is a
 // messageProducer function defined it is ignored.
+// Note: Messages are broadcast via arena.notify.* for all clients. All clients subscribed to this notifier type
+// will receive updates through the broadcast channel.
 func (notifier *Notifier) NotifyWithMessage(messageBody any) {
 	notifier.mutex.Lock()
 	defer notifier.mutex.Unlock()
 
-	// Broadcast to global NATS notify channel
+	// Broadcast to global NATS notify channel - all clients listening on this notifier type will receive it
 	subject := "arena.notify." + notifier.messageType
 	PublishMessage(subject, notifier.messageType, messageBody)
-
-	// Broadcast to specific clients interested in this notifier
-	NotifyClients(notifier.messageType, messageBody)
 
 	message := messageEnvelope{messageType: notifier.messageType, messageBody: messageBody}
 	for listener := range notifier.listeners {
@@ -134,24 +133,4 @@ func UnregisterClient(clientId string) {
 	clientsMutex.Lock()
 	defer clientsMutex.Unlock()
 	delete(clients, clientId)
-}
-
-// NotifyClients sends a message to all clients subscribed to a specific message type.
-func NotifyClients(messageType string, messageBody any) {
-	clientsMutex.Lock()
-	targetClients := make([]string, 0)
-	for clientId, subs := range clients {
-		for _, sub := range subs {
-			if sub == messageType {
-				targetClients = append(targetClients, clientId)
-				break
-			}
-		}
-	}
-	clientsMutex.Unlock()
-
-	for _, clientId := range targetClients {
-		subject := "arena.clients." + clientId + "." + messageType
-		PublishMessage(subject, messageType, messageBody)
-	}
 }

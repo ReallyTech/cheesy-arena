@@ -177,6 +177,8 @@ func NewArena(dbPath string) (*Arena, error) {
 				}
 			}
 			websocket.RegisterClientSubscriptions(clientId, subscriptions)
+			// Record initial heartbeat for the client
+			websocket.RecordClientHeartbeat(clientId)
 
 			config := &DisplayConfiguration{
 				Id:   clientId,

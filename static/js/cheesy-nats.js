@@ -49,20 +49,32 @@ var CheesyNats = function (path, events, options) {
         return;
       }
 
-      // Fetch NATS token and URL from backend
+      // Fetch NKey seed from backend (authenticated via session cookie)
       const response = await fetch(natsUrl);
       if (!response.ok) {
-        throw new Error("Failed to fetch NATS token from " + natsUrl);
+        throw new Error("Failed to fetch NATS credentials from " + natsUrl);
       }
       const auth = await response.json();
 
+      // Validate that we received a token
+      if (!auth.token || auth.token.trim().length === 0) {
+        throw new Error("Failed to receive authentication token from server");
+      }
+
       this.sc = nats.StringCodec();
-      this.nc = await nats.connect({
-        servers: auth.url || "ws://" + window.location.hostname + ":8081",
-        token: auth.token,
-        maxReconnectAttempts: -1,
-      });
-      console.log("NATS connected with token to " + (auth.url || "ws://" + window.location.hostname + ":8081"));
+      
+      try {
+        const servers = [auth.url || "ws://" + window.location.hostname + ":8081"];
+        this.nc = await nats.connect({
+          servers: servers,
+          token: auth.token,
+          maxReconnectAttempts: -1,
+          reconnectDelayHandler: () => 1000,
+        });
+      } catch (e) {
+        console.error("Failed to connect to NATS:", e);
+        throw e;
+      }
 
       // Send initial registration or connection status if needed via WebSocket path
       // but for NATS we are already connected. 
@@ -81,12 +93,53 @@ var CheesyNats = function (path, events, options) {
       const clientSub = this.nc.subscribe("arena.clients." + clientId + ".>");
       (async () => {
         for await (const m of clientSub) {
-          const payload = JSON.parse(this.sc.decode(m.data));
-          if (this.events[payload.type]) {
-            this.events[payload.type](payload.data);
+          try {
+            const payload = JSON.parse(that.sc.decode(m.data));
+            const event = { type: payload.type, data: payload.data };
+            if (that.events[payload.type]) {
+              that.events[payload.type](event);
+            } else {
+              console.warn("No event handler for message type: " + payload.type);
+            }
+          } catch (err) {
+            console.error("Error processing client-specific message:", err);
+            console.error("Raw message data:", m.data);
+            console.error("Decoded data:", that.sc.decode(m.data));
           }
         }
       })();
+
+      // Subscribe to broadcast updates for all registered event types
+      // This allows receiving messages published via arena.notify.<messageType>
+      const broadcastSubscriptions = [];
+      for (const messageType in this.events) {
+        if (messageType === 'open' || messageType === 'close' || messageType === 'error') continue;
+
+        const broadcastSubject = "arena.notify." + messageType;
+        const broadcastSub = this.nc.subscribe(broadcastSubject);
+        broadcastSubscriptions.push({ subject: broadcastSubject, sub: broadcastSub, messageType: messageType });
+      }
+
+      // Start listening to all broadcast subscriptions
+      for (const subscription of broadcastSubscriptions) {
+        (async (sub, messageType) => {
+          for await (const m of sub) {
+            try {
+              const payload = JSON.parse(that.sc.decode(m.data));
+              const event = { type: payload.type, data: payload.data };
+              if (that.events[payload.type]) {
+                that.events[payload.type](event);
+              } else {
+                console.warn("No event handler for message type: " + payload.type);
+              }
+            } catch (err) {
+              console.error("Error processing broadcast message for " + messageType + ":", err);
+              console.error("Raw message data:", m.data);
+              console.error("Decoded data:", that.sc.decode(m.data));
+            }
+          }
+        })(subscription.sub, subscription.messageType);
+      }
 
       // Bootstrap current state for each registered event
       for (const messageType in this.events) {
@@ -95,7 +148,8 @@ var CheesyNats = function (path, events, options) {
         try {
           const msg = await this.nc.request("arena.bootstrap." + messageType, nats.Empty, { timeout: 1000 });
           const payload = JSON.parse(this.sc.decode(msg.data));
-          this.events[payload.type](payload.data);
+          const event = { type: payload.type, data: payload.data };
+          this.events[payload.type](event);
         } catch (err) {
           // It's fine if some don't support bootstrap
         }

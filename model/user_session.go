@@ -11,6 +11,7 @@ type UserSession struct {
 	Id        int `db:"id"`
 	Token     string
 	Username  string
+	NKeySeed  string
 	CreatedAt time.Time
 }
 
@@ -30,6 +31,10 @@ func (database *Database) GetUserSessionByToken(token string) (*UserSession, err
 		}
 	}
 	return nil, nil
+}
+
+func (database *Database) GetAllUserSessions() ([]UserSession, error) {
+	return database.userSessionTable.getAll()
 }
 
 func (database *Database) DeleteUserSession(id int) error {

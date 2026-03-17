@@ -29,11 +29,11 @@ func TestNATSIntegration(t *testing.T) {
 
 	// 3. Test Authentication and Token Generation
 	t.Run("AuthTokens", func(t *testing.T) {
-		adminToken, err := GetNATSToken("admin", true)
+		adminToken, err := GenerateNKeyForUser("admin", true)
 		assert.Nil(t, err)
 		assert.NotEmpty(t, adminToken)
 
-		userToken, err := GetNATSToken("user", false)
+		userToken, err := GenerateNKeyForUser("user", false)
 		assert.Nil(t, err)
 		assert.NotEmpty(t, userToken)
 

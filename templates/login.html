@@ -40,4 +40,15 @@ UI for authenticating with the server.
 </div>
 {{end}}
 {{define "script"}}
+<script>
+  // Generate or retrieve clientId for NATS authentication
+  (function() {
+    let clientId = sessionStorage.getItem("nats_client_id");
+    if (!clientId) {
+      clientId = crypto.randomUUID();
+      sessionStorage.setItem("nats_client_id", clientId);
+    }
+    document.getElementById("clientId").value = clientId;
+  })();
+</script>
 {{end}}

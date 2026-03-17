@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Team254/cheesy-arena/model"
+	"github.com/Team254/cheesy-arena/websocket"
 	"github.com/google/uuid"
 )
 
@@ -23,12 +24,21 @@ func (web *Web) loginHandler(w http.ResponseWriter, r *http.Request) {
 // Processes the login request.
 func (web *Web) loginPostHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.PostFormValue("username")
+
 	if err := web.checkAuthPassword(username, r.PostFormValue("password")); err != nil {
 		web.renderLogin(w, r, err.Error())
 		return
 	}
 
-	session := model.UserSession{Token: uuid.New().String(), Username: username, CreatedAt: time.Now()}
+	// Generate NKey seed for this session
+	isAdmin := username == adminUser
+	nkeySeed, err := websocket.GenerateNKeyForUser(username, isAdmin)
+	if err != nil {
+		handleWebErr(w, err)
+		return
+	}
+
+	session := model.UserSession{Token: uuid.New().String(), Username: username, NKeySeed: nkeySeed, CreatedAt: time.Now()}
 	if err := web.arena.Database.CreateUserSession(&session); err != nil {
 		handleWebErr(w, err)
 		return

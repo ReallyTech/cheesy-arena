@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,22 +28,57 @@ type natsAuthResponse struct {
 
 // Websocket API for receiving arena status updates.
 func (web *Web) natsAuthApiHandler(w http.ResponseWriter, r *http.Request) {
+	// If no password is configured, allow access without authentication
+	if web.arena.EventSettings.AdminPassword == "" {
+		// Generate a temporary NKey seed for unauthenticated access
+		seed, err := websocket.GenerateNKeyForUser(adminUser, true)
+		if err != nil {
+			handleWebErr(w, err)
+			return
+		}
+		if seed == "" {
+			handleWebErr(w, fmt.Errorf("NATS server not initialized. Please wait and refresh."))
+			return
+		}
+
+		hostname, _, err := net.SplitHostPort(r.Host)
+		if err != nil {
+			hostname = r.Host // If there's no port, use Host as-is
+		}
+		resp := natsAuthResponse{
+			Token: seed,                                  // Authentication token
+			Url:   fmt.Sprintf("ws://%s:8081", hostname), // Use our NATS-over-WebSockets port
+		}
+
+		jsonData, err := json.Marshal(resp)
+		if err != nil {
+			handleWebErr(w, err)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json")
+		w.Write(jsonData)
+		return
+	}
+
+	// If password is configured, require valid session (verified by session cookie)
 	session := web.getUserSessionFromCookie(r)
 	if session == nil {
 		handleWebErr(w, fmt.Errorf("Not logged in."))
 		return
 	}
-
-	isAdmin := session.Username == adminUser
-	token, err := websocket.GetNATSToken(session.Username, isAdmin)
-	if err != nil {
-		handleWebErr(w, err)
+	if session.NKeySeed == "" {
+		handleWebErr(w, fmt.Errorf("Session token not initialized. Please log out and log in again."))
 		return
 	}
 
+	hostname, _, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		hostname = r.Host // If there's no port, use Host as-is
+	}
 	resp := natsAuthResponse{
-		Token: token,
-		Url:   fmt.Sprintf("ws://%s:8081", r.Host), // Use our NATS-over-WebSockets port
+		Token: session.NKeySeed,                      // Authentication token (stored in NKeySeed field for now)
+		Url:   fmt.Sprintf("ws://%s:8081", hostname), // Use our NATS-over-WebSockets port
 	}
 
 	jsonData, err := json.Marshal(resp)

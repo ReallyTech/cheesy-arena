@@ -4,6 +4,7 @@
 package field
 
 import (
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -18,7 +19,8 @@ func TestDisplayFromUrl(t *testing.T) {
 	}
 
 	// Test the various types.
-	query["displayId"] = []string{"123"}
+	displayId := "00000000-0000-0000-0000-000000000123"
+	query["displayId"] = []string{displayId}
 	display, err = DisplayFromUrl("/blorpy", query)
 	assert.Nil(t, display)
 	if assert.NotNil(t, err) {
@@ -54,23 +56,26 @@ func TestDisplayFromUrl(t *testing.T) {
 func TestDisplayToUrl(t *testing.T) {
 	display := &Display{
 		DisplayConfiguration: DisplayConfiguration{
-			Id:            "254",
+			Id:            "00000000-0000-0000-0000-000000000254",
 			Nickname:      "Test Nickname",
 			Type:          RankingsDisplay,
 			Configuration: map[string]string{"f": "1", "z": "#fff", "a": "3", "c": "4"},
 		},
 	}
-	assert.Equal(t, "/displays/rankings?displayId=254&nickname=Test+Nickname&a=3&c=4&f=1&z=%23fff", display.ToUrl())
+	assert.Equal(t, "/displays/rankings?displayId=00000000-0000-0000-0000-000000000254&nickname=Test+Nickname&a=3&c=4&f=1&z=%23fff", display.ToUrl())
 }
 
 func TestNextDisplayId(t *testing.T) {
 	arena := setupTestArena(t)
 
-	assert.Equal(t, "100", arena.NextDisplayId())
+	firstDisplayId := arena.NextDisplayId()
+	if _, err := uuid.Parse(firstDisplayId); assert.NoError(t, err) {
+		assert.Equal(t, "00000000-0000-0000-0000-000000000001", firstDisplayId)
+	}
 
-	displayConfig := &DisplayConfiguration{Id: "100"}
+	displayConfig := &DisplayConfiguration{Id: firstDisplayId}
 	arena.RegisterDisplay(displayConfig, "")
-	assert.Equal(t, "101", arena.NextDisplayId())
+	assert.Equal(t, "00000000-0000-0000-0000-000000000002", arena.NextDisplayId())
 }
 
 func TestDisplayRegisterUnregister(t *testing.T) {

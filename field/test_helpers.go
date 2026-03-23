@@ -6,6 +6,7 @@
 package field
 
 import (
+	"fmt"
 	"github.com/Team254/cheesy-arena/game"
 	"github.com/Team254/cheesy-arena/model"
 	"github.com/stretchr/testify/assert"
@@ -17,12 +18,19 @@ import (
 func SetupTestArena(t *testing.T) *Arena {
 	rand.Seed(0)
 	model.BaseDir = ".."
+	previousDisplayIdGenerator := displayIdGenerator
+	displayIdCounter := 0
+	displayIdGenerator = func() string {
+		displayIdCounter++
+		return fmt.Sprintf("00000000-0000-0000-0000-%012d", displayIdCounter)
+	}
 	dbDir := t.TempDir()
 	dbPath := filepath.Join(dbDir, "test.db")
 	arena, err := NewArena(dbPath)
 	assert.Nil(t, err)
 	t.Cleanup(
 		func() {
+			displayIdGenerator = previousDisplayIdGenerator
 			arena.Database.Close()
 		},
 	)

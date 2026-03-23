@@ -16,18 +16,24 @@ body {
 }
 #displayId {
   position: absolute;
-  top: 0;
-  bottom: 0;
   left: 0;
   right: 0;
-  margin: auto auto;
-  height: 1px;
-  line-height: 1px;
-  font-size: 500px;
+  top: 36%;
+  transform: translateY(-50%);
+  margin: 0 auto;
+  width: 9ch;
+  max-width: 85vw;
+  line-height: 0.96;
+  font-size: clamp(48px, 7vw, 160px);
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: monospace;
 }
 #displayNickname {
   position: absolute;
-  bottom: 15%;
+  bottom: 12%;
   left: 0;
   right: 0;
   margin: auto auto;

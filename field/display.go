@@ -8,19 +8,22 @@ package field
 import (
 	"fmt"
 	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/google/uuid"
 	"net/url"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	minDisplayId       = 100
 	displayPurgeTtlMin = 30
 )
+
+var displayIdGenerator = func() string {
+	return uuid.NewString()
+}
 
 type DisplayType int
 
@@ -89,12 +92,13 @@ type DisplayConfiguration struct {
 
 // Parses the given display URL path and query string to extract the configuration.
 func DisplayFromUrl(path string, query map[string][]string) (*DisplayConfiguration, error) {
-	if _, ok := query["displayId"]; !ok {
+	displayIds, ok := query["displayId"]
+	if !ok || len(displayIds) == 0 || displayIds[0] == "" {
 		return nil, fmt.Errorf("Display ID not present in request.")
 	}
 
 	var displayConfig DisplayConfiguration
-	displayConfig.Id = query["displayId"][0]
+	displayConfig.Id = displayIds[0]
 	if nickname, ok := query["nickname"]; ok {
 		displayConfig.Nickname, _ = url.QueryUnescape(nickname[0])
 	}
@@ -157,14 +161,11 @@ func (arena *Arena) NextDisplayId() string {
 	displayRegistryMutex.Lock()
 	defer displayRegistryMutex.Unlock()
 
-	// Loop until we get an ID that isn't already used. This is inefficient if there is a large number of displays, but
-	// that should never be the case.
-	candidateId := minDisplayId
 	for {
-		if _, ok := arena.Displays[strconv.Itoa(candidateId)]; !ok {
-			return strconv.Itoa(candidateId)
+		candidateId := displayIdGenerator()
+		if _, ok := arena.Displays[candidateId]; !ok {
+			return candidateId
 		}
-		candidateId++
 	}
 }
 

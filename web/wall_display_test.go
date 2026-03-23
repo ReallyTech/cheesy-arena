@@ -15,7 +15,7 @@ func TestWallDisplay(t *testing.T) {
 
 	recorder := web.getHttpResponse("/displays/wall")
 	assert.Equal(t, 302, recorder.Code)
-	assert.Contains(t, recorder.Header().Get("Location"), "displayId=100")
+	assert.Contains(t, recorder.Header().Get("Location"), "displayId=00000000-0000-0000-0000-000000000001")
 	assert.Contains(t, recorder.Header().Get("Location"), "background=%23000")
 	assert.Contains(t, recorder.Header().Get("Location"), "message=")
 	assert.Contains(t, recorder.Header().Get("Location"), "reversed=false")

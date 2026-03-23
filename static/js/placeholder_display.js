@@ -8,7 +8,7 @@ var websocket;
 $(function () {
   // Read the configuration for this display from the URL query string.
   var urlParams = new URLSearchParams(window.location.search);
-  $("#displayId").text(urlParams.get("displayId"));
+  $("#displayId").text(DisplayIdentity.getDisplayId());
   var nickname = urlParams.get("nickname");
   if (nickname !== null) {
     $("#displayNickname").text(nickname);

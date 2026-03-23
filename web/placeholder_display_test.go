@@ -4,11 +4,12 @@
 package web
 
 import (
+	"testing"
+
 	"github.com/Team254/cheesy-arena/field"
 	"github.com/Team254/cheesy-arena/websocket"
 	gorillawebsocket "github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPlaceholderDisplay(t *testing.T) {

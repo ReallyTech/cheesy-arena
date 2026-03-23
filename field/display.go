@@ -7,14 +7,15 @@ package field
 
 import (
 	"fmt"
-	"github.com/Team254/cheesy-arena/websocket"
-	"github.com/google/uuid"
 	"net/url"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Team254/cheesy-arena/websocket"
+	"github.com/google/uuid"
 )
 
 const (
